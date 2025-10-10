@@ -7,10 +7,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.hata.travelapp.screen.trip.TripScreen
 import com.hata.travelapp.ui.theme.TravelAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,11 +24,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             TravelAppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                val navController = rememberNavController()
+                Scaffold( modifier = Modifier.fillMaxSize() ) { innerPadding ->
+                    ApplicationNavigationHost(navController, Modifier.padding(innerPadding))
                 }
             }
         }
@@ -31,17 +34,15 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    TravelAppTheme {
-        Greeting("Android")
+fun ApplicationNavigationHost(navController: NavHostController, modifier: Modifier) {
+    NavHost(navController = navController, startDestination = "trips/1",
+        modifier = modifier) {
+        composable(
+            route = "trips/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val tripId = backStackEntry.arguments?.getInt("id")
+            TripScreen(0)
+        }
     }
 }
