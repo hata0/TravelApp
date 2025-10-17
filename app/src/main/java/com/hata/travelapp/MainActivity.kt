@@ -41,8 +41,7 @@ fun ApplicationNavigationHost(navController: NavHostController, modifier: Modifi
             route = "trips/{id}",
             arguments = listOf(navArgument("id") { type = NavType.IntType })
         ) { backStackEntry ->
-            val tripId = backStackEntry.arguments?.getInt("id")
-            TripScreen(0)
+            TripScreen()
         }
     }
 }
