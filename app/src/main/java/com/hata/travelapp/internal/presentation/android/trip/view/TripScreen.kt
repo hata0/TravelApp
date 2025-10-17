@@ -1,4 +1,4 @@
-package com.hata.travelapp.screen.trip
+package com.hata.travelapp.internal.presentation.android.trip.view
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable

@@ -15,7 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.hata.travelapp.screen.trip.TripScreen
+import com.hata.travelapp.internal.presentation.android.trip.view.TripScreen
 import com.hata.travelapp.ui.theme.TravelAppTheme
 
 class MainActivity : ComponentActivity() {
