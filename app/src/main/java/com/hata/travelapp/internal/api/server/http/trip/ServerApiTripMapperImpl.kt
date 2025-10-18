@@ -1,4 +1,4 @@
-package com.hata.travelapp.internal.gateway.server.http.trip
+package com.hata.travelapp.internal.api.server.http.trip
 
 import com.hata.travelapp.internal.domain.error.AppError
 import com.hata.travelapp.internal.domain.trip.Trip

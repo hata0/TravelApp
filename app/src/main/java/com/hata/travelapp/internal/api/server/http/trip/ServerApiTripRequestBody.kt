@@ -1,4 +1,4 @@
-package com.hata.travelapp.internal.gateway.server.http.trip
+package com.hata.travelapp.internal.api.server.http.trip
 
 import kotlinx.serialization.SerialName
 
