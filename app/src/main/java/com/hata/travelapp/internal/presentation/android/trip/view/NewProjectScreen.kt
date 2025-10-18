@@ -8,13 +8,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,12 +35,20 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+/**
+ * 新規旅行プロジェクトの作成画面。
+ * プロジェクト名、出発日、帰宅日を入力する。
+ *
+ * @param onNavigateToDateSelection 「作成」ボタンがクリックされたときのコールバック。
+ * @param onNavigateBack 戻るボタンがクリックされたときのコールバック。
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewProjectScreen(
     onNavigateToDateSelection: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
+    // TODO: ViewModelに状態管理を移行する
     var projectName by remember { mutableStateOf("") }
     var startDate by remember { mutableStateOf<Long?>(null) }
     var endDate by remember { mutableStateOf<Long?>(null) }
@@ -43,6 +57,7 @@ fun NewProjectScreen(
 
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
 
+    // 出発日選択ダイアログ
     if (showStartDatePicker) {
         val datePickerState = rememberDatePickerState()
         DatePickerDialog(
@@ -69,6 +84,7 @@ fun NewProjectScreen(
         }
     }
 
+    // 帰宅日選択ダイアログ
     if (showEndDatePicker) {
         val datePickerState = rememberDatePickerState()
         DatePickerDialog(
@@ -95,50 +111,61 @@ fun NewProjectScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        OutlinedTextField(
-            value = projectName,
-            onValueChange = { projectName = it },
-            label = { Text("プロジェクト名") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { showStartDatePicker = true }) {
-                val startDateText = startDate?.let {
-                    Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate().format(dateFormatter)
-                } ?: "出発日"
-                Text(startDateText)
-            }
-            Button(onClick = { showEndDatePicker = true }) {
-                 val endDateText = endDate?.let {
-                    Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate().format(dateFormatter)
-                } ?: "帰宅日"
-                Text(endDateText)
-            }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("新規プロジェクト作成") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
+                    }
+                }
+            )
         }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            OutlinedTextField(
+                value = projectName,
+                onValueChange = { projectName = it },
+                label = { Text("プロジェクト名") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = onNavigateToDateSelection) {
-            Text("作成")
-        }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = { showStartDatePicker = true }) {
+                    val startDateText = startDate?.let {
+                        Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate().format(dateFormatter)
+                    } ?: "出発日"
+                    Text(startDateText)
+                }
+                Button(onClick = { showEndDatePicker = true }) {
+                    val endDateText = endDate?.let {
+                        Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate().format(dateFormatter)
+                    } ?: "帰宅日"
+                    Text(endDateText)
+                }
+            }
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-        Button(onClick = onNavigateBack) {
-            Text("戻る")
+            Button(onClick = onNavigateToDateSelection) {
+                Text("作成")
+            }
         }
     }
 }
 
+/**
+ * `NewProjectScreen`のプレビュー用Composable。
+ */
 @Preview(showBackground = true)
 @Composable
 fun NewProjectScreenPreview() {

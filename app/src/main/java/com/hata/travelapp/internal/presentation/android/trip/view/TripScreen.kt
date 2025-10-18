@@ -5,6 +5,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 
+/**
+ * アプリケーションのナビゲーションを統括するComposable。
+ * NavHostを使用して、各画面（HomeScreen, NewProjectScreenなど）へのルートを定義する。
+ * このComposableが、事実上の画面遷移のコントローラーとして機能する。
+ */
 @Composable
 fun TripScreen() {
     val navController = rememberNavController()
@@ -35,8 +40,8 @@ fun TripScreen() {
         }
         composable("timeline") {
             TimelineScreen(
-                onNavigateToMap = { navController.navigate("map") },
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateToMap = { navController.popBackStack() },
+                onNavigateBack = { navController.popBackStack("date_selection", inclusive = false) }
             )
         }
     }
