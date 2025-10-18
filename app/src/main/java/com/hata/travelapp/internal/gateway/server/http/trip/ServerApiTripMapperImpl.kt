@@ -11,7 +11,7 @@ import java.time.format.DateTimeParseException
 class ServerApiTripMapperImpl : ServerApiTripMapper {
     private val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
-    override fun toTripEntity(model: ServerApiTripModel): Trip {
+    override fun toEntity(model: ServerApiTripModel): Trip {
         fun parseOrThrow(value: String): LocalDateTime {
             return try {
                 LocalDateTime.parse(value, formatter)
@@ -31,7 +31,7 @@ class ServerApiTripMapperImpl : ServerApiTripMapper {
         )
     }
 
-    override fun toTripModel(entity: Trip): ServerApiTripModel {
+    override fun toModel(entity: Trip): ServerApiTripModel {
         return ServerApiTripModel(
             id = entity.id.value,
             title = entity.title,
@@ -40,9 +40,5 @@ class ServerApiTripMapperImpl : ServerApiTripMapper {
             createdAt = entity.createdAt.format(formatter),
             updatedAt = entity.updatedAt.format(formatter)
         )
-    }
-
-    override fun toTripIdModel(entity: TripId): ServerApiTripIdModel {
-        return ServerApiTripIdModel(entity.value)
     }
 }
