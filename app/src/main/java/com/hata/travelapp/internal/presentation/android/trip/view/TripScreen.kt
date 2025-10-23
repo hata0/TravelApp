@@ -17,12 +17,18 @@ fun TripScreen() {
         composable("home") {
             HomeScreen(
                 onNavigateToNewProject = { navController.navigate("new_project") },
-                onProjectClick = { navController.navigate("date_selection") }
+                onProjectClick = { navController.navigate("date_selection") },
+                onEditProject = { navController.navigate("new_project") }, // 編集時も新規作成画面に遷移
+                onDeleteProject = { /* TODO: ViewModelと連携して削除処理を実装 */ }
             )
         }
         composable("new_project") {
             NewProjectScreen(
-                onNavigateToDateSelection = { navController.navigate("date_selection") },
+                onNavigateToDateSelection = {
+                    navController.navigate("date_selection") {
+                        popUpTo("new_project") { inclusive = true }
+                    }
+                },
                 onNavigateBack = { navController.popBackStack() }
             )
         }
