@@ -77,4 +77,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
+    implementation(libs.play.services.maps)
+    implementation(libs.maps.compose)
 }

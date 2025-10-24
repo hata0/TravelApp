@@ -18,6 +18,10 @@ import androidx.navigation.navArgument
 import com.hata.travelapp.internal.ui.android.trip.view.TripScreen
 import com.hata.travelapp.ui.theme.TravelAppTheme
 
+/**
+ * このアプリのメインアクティビティ。
+ * アプリ起動時のエントリーポイント（入口）となる。
+ */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +37,14 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/**
+ * アプリケーション全体のナビゲーションホストを定義するComposable。
+ * 現状はTripScreenへの単一のルートを持つが、将来的には複数のトップレベル画面（例：設定画面など）を
+ * ここで管理することができる。
+ *
+ * @param navController アプリケーション全体のナビゲーションを管理するコントローラー。
+ * @param modifier このComposableに適用されるModifier。
+ */
 @Composable
 fun ApplicationNavigationHost(navController: NavHostController, modifier: Modifier) {
     NavHost(navController = navController, startDestination = "trips/1",
@@ -41,8 +53,8 @@ fun ApplicationNavigationHost(navController: NavHostController, modifier: Modifi
             route = "trips/{id}",
             arguments = listOf(navArgument("id") { type = NavType.IntType })
         ) { backStackEntry ->
-            val tripId = backStackEntry.arguments?.getInt("id")
-            TripScreen(0)
+            // 現在はTripScreenを呼び出すだけだが、将来的にはここでViewModelの初期化などを行う
+            TripScreen()
         }
     }
 }
