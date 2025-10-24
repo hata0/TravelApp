@@ -10,12 +10,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import com.hata.travelapp.internal.ui.android.trip.view.TripScreen
+import com.hata.travelapp.internal.ui.android.home.view.HomeScreen
 import com.hata.travelapp.ui.theme.TravelAppTheme
 
 /**
@@ -47,14 +45,32 @@ class MainActivity : ComponentActivity() {
  */
 @Composable
 fun ApplicationNavigationHost(navController: NavHostController, modifier: Modifier) {
-    NavHost(navController = navController, startDestination = "trips/1",
+    NavHost(navController = navController, startDestination = "home",
         modifier = modifier) {
-        composable(
-            route = "trips/{id}",
-            arguments = listOf(navArgument("id") { type = NavType.IntType })
-        ) { backStackEntry ->
-            // 現在はTripScreenを呼び出すだけだが、将来的にはここでViewModelの初期化などを行う
-            TripScreen()
+        composable("home") {
+            HomeScreen(
+                onNavigateToNewProject = { navController.navigate("new_project") },
+                onProjectClick = { navController.navigate("date_selection") },
+                onEditProject = { navController.navigate("new_project") }, // 編集時も新規作成画面に遷移
+                onDeleteProject = { /* TODO: ViewModelと連携して削除処理を実装 */ }
+            )
         }
+//        composable("trips/new") {
+//            TripsNewScreen(
+//                onNavigateToDateSelection = {
+//                    navController.navigate("date_selection") {
+//                        popUpTo("new_project") { inclusive = true }
+//                    }
+//                },
+//                onNavigateBack = { navController.popBackStack() }
+//            )
+//        }
+//        composable(
+//            route = "trips/{id}",
+//            arguments = listOf(navArgument("id") { type = NavType.IntType })
+//        ) { backStackEntry ->
+//            // 現在はTripScreenを呼び出すだけだが、将来的にはここでViewModelの初期化などを行う
+//            TripScreen()
+//        }
     }
 }

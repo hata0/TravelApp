@@ -1,13 +1,9 @@
-package com.hata.travelapp.internal.presentation.android.trip.view
+package com.hata.travelapp.internal.ui.android.trip_map.view
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -20,7 +16,6 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 
 /**
@@ -55,14 +50,14 @@ fun MapScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
+//                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
                     }
                 }
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onNavigateToTimeline) {
-                Icon(Icons.AutoMirrored.Filled.List, contentDescription = "タイムラインへ")
+//                Icon(Icons.AutoMirrored.Filled.List, contentDescription = "タイムラインへ")
             }
         }
     ) { innerPadding ->
@@ -71,7 +66,7 @@ fun MapScreen(
             cameraPositionState = cameraPositionState
         ) {
             Marker(
-                state = MarkerState(position = tokyo),
+//                state = MarkerState(position = tokyo),
                 title = "Tokyo",
                 snippet = "Marker in Tokyo"
             )

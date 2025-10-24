@@ -1,16 +1,11 @@
-package com.hata.travelapp.internal.presentation.android.trip.view
+package com.hata.travelapp.internal.ui.android.trips_new.view
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Notes
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -43,7 +38,7 @@ import java.time.format.DateTimeFormatter
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NewProjectScreen(
+fun TripsNewScreen(
     onNavigateToDateSelection: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
@@ -97,7 +92,7 @@ fun NewProjectScreen(
                 title = { Text("新規プロジェクト作成") }, // TODO: 編集モードの場合はタイトルを変更
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
+//                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
                     }
                 }
             )
@@ -144,11 +139,11 @@ fun NewProjectScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Row(verticalAlignment = Alignment.Top) {
-                Icon(
-                    Icons.Default.Notes,
-                    contentDescription = "説明アイコン",
-                    modifier = Modifier.padding(top = 16.dp, end = 8.dp)
-                )
+//                Icon(
+//                    Icons.Default.Notes,
+//                    contentDescription = "説明アイコン",
+//                    modifier = Modifier.padding(top = 16.dp, end = 8.dp)
+//                )
                 TextField(
                     value = description,
                     onValueChange = { description = it },
@@ -190,11 +185,11 @@ private fun DateRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (showIcon) {
-            Icon(
-                Icons.Default.Schedule,
-                contentDescription = "日付アイコン",
-                modifier = Modifier.size(24.dp)
-            )
+//            Icon(
+//                Icons.Default.Schedule,
+//                contentDescription = "日付アイコン",
+//                modifier = Modifier.size(24.dp)
+//            )
         } else {
             Spacer(modifier = Modifier.width(24.dp)) // アイコンの分のスペースを確保
         }
@@ -220,5 +215,5 @@ private fun DateRow(
 @Preview(showBackground = true)
 @Composable
 fun NewProjectScreenPreview() {
-    NewProjectScreen(onNavigateToDateSelection = {}, onNavigateBack = {})
+    TripsNewScreen(onNavigateToDateSelection = {}, onNavigateBack = {})
 }

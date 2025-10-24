@@ -1,4 +1,4 @@
-package com.hata.travelapp.internal.presentation.android.trip.view
+package com.hata.travelapp.internal.ui.android.home.view
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,14 +12,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -56,7 +52,7 @@ fun HomeScreen(
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = onNavigateToNewProject) {
-                Icon(Icons.Default.Add, contentDescription = "新規作成")
+//                Icon(Icons.Default.Add, contentDescription = "新規作成")
             }
         }
     ) { innerPadding ->
@@ -113,7 +109,7 @@ private fun ProjectCard(
             )
             Box {
                 IconButton(onClick = { menuExpanded = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "メニュー")
+//                    Icon(Icons.Default.MoreVert, contentDescription = "メニュー")
                 }
                 DropdownMenu(
                     expanded = menuExpanded,

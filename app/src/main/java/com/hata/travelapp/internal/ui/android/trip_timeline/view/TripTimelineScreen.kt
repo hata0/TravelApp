@@ -1,4 +1,4 @@
-package com.hata.travelapp.internal.presentation.android.trip.view
+package com.hata.travelapp.internal.ui.android.trip_timeline.view
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,10 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Train
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -75,9 +71,9 @@ fun TimelineScreen(
     val (timelineItems, setTimelineItems) = remember {
         mutableStateOf(listOf(
             TimelineItem.StartPoint(name = "自宅", departureTime = "10:00"),
-            TimelineItem.Travel(travelTime = "電車 15分", transportModeIcon = Icons.Default.Train),
+//            TimelineItem.Travel(travelTime = "電車 15分", transportModeIcon = Icons.Default.Train),
             TimelineItem.Destination(name = "東京駅", arrivalTime = "10:15", departureTime = "10:30", stayTime = "滞在 15分"),
-            TimelineItem.Travel(travelTime = "電車 15分", transportModeIcon = Icons.Default.Train),
+//            TimelineItem.Travel(travelTime = "電車 15分", transportModeIcon = Icons.Default.Train),
             TimelineItem.EndPoint(name = "ホテル", arrivalTime = "10:45")
         ))
     }
@@ -127,14 +123,14 @@ fun TimelineScreen(
                 title = { Text("タイムライン") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
+//                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
                     }
                 }
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onNavigateToMap) {
-                Icon(Icons.Default.Map, contentDescription = "マップへ")
+//                Icon(Icons.Default.Map, contentDescription = "マップへ")
             }
         }
     ) { innerPadding ->
