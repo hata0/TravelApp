@@ -14,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.hata.travelapp.internal.ui.android.home.view.HomeScreen
+import com.hata.travelapp.internal.ui.android.trips_new.view.TripsNewScreen
 import com.hata.travelapp.ui.theme.TravelAppTheme
 
 /**
@@ -45,7 +46,7 @@ class MainActivity : ComponentActivity() {
  */
 @Composable
 fun ApplicationNavigationHost(navController: NavHostController, modifier: Modifier) {
-    NavHost(navController = navController, startDestination = "home",
+    NavHost(navController = navController, startDestination = "trips/new",
         modifier = modifier) {
         composable("home") {
             HomeScreen(
@@ -55,16 +56,16 @@ fun ApplicationNavigationHost(navController: NavHostController, modifier: Modifi
                 onDeleteProject = { /* TODO: ViewModelと連携して削除処理を実装 */ }
             )
         }
-//        composable("trips/new") {
-//            TripsNewScreen(
-//                onNavigateToDateSelection = {
-//                    navController.navigate("date_selection") {
-//                        popUpTo("new_project") { inclusive = true }
-//                    }
-//                },
-//                onNavigateBack = { navController.popBackStack() }
-//            )
-//        }
+        composable("trips/new") {
+            TripsNewScreen(
+                onNavigateToDateSelection = {
+                    navController.navigate("date_selection") {
+                        popUpTo("new_project") { inclusive = true }
+                    }
+                },
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
 //        composable(
 //            route = "trips/{id}",
 //            arguments = listOf(navArgument("id") { type = NavType.IntType })
