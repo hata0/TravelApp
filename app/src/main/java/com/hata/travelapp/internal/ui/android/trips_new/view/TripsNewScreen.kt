@@ -4,8 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Notes
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -49,7 +47,6 @@ fun TripsNewScreen(
 ) {
     // TODO: ViewModelに状態管理を移行する
     var projectName by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
     var startDate by remember { mutableStateOf<Long?>(null) }
     var endDate by remember { mutableStateOf<Long?>(null) }
     var showStartDatePicker by remember { mutableStateOf(false) }
@@ -94,7 +91,7 @@ fun TripsNewScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("新規プロジェクト作成") }, // TODO: 編集モードの場合はタイトルを変更
+                title = { Text("旅程作成") }, // TODO: 編集モードの場合はタイトルを変更
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
@@ -128,7 +125,6 @@ fun TripsNewScreen(
                 selectedDate = startDate,
                 dateFormatter = dateFormatter,
                 onClick = { showStartDatePicker = true },
-                showIcon = true
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -138,30 +134,9 @@ fun TripsNewScreen(
                 selectedDate = endDate,
                 dateFormatter = dateFormatter,
                 onClick = { showEndDatePicker = true },
-                showIcon = false
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            Row(verticalAlignment = Alignment.Top) {
-                Icon(
-                    Icons.AutoMirrored.Filled.Notes,
-                    contentDescription = "説明アイコン",
-                    modifier = Modifier.padding(top = 16.dp, end = 8.dp)
-                )
-                TextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("説明") },
-                    modifier = Modifier.fillMaxWidth().weight(1f),
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Gray,
-                        focusedIndicatorColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -181,7 +156,6 @@ private fun DateRow(
     selectedDate: Long?,
     dateFormatter: DateTimeFormatter,
     onClick: () -> Unit,
-    showIcon: Boolean
 ) {
     Row(
         modifier = Modifier
@@ -189,15 +163,7 @@ private fun DateRow(
             .clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (showIcon) {
-            Icon(
-                Icons.Default.Schedule,
-                contentDescription = "日付アイコン",
-                modifier = Modifier.size(24.dp)
-            )
-        } else {
-            Spacer(modifier = Modifier.width(24.dp)) // アイコンの分のスペースを確保
-        }
+
         Row(
             modifier = Modifier.fillMaxWidth().padding(start = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
