@@ -79,4 +79,5 @@ dependencies {
     implementation(libs.ktor.client.okhttp)
     implementation(libs.play.services.maps)
     implementation(libs.maps.compose)
+    implementation(libs.androidx.material.icons.extended)
 }
