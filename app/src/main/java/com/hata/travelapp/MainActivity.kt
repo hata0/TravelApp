@@ -16,7 +16,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.hata.travelapp.internal.ui.android.home.view.HomeScreen
+import com.hata.travelapp.internal.ui.android.trip_map.view.TripMapScreen
 import com.hata.travelapp.internal.ui.android.trip_timeline.view.TripTimelineScreen
+import com.hata.travelapp.internal.ui.android.trips_date_selection.view.TripsDateSelectionScreen
 import com.hata.travelapp.internal.ui.android.trips_new.view.TripsNewScreen
 import com.hata.travelapp.ui.theme.TravelAppTheme
 
@@ -49,13 +51,13 @@ class MainActivity : ComponentActivity() {
  */
 @Composable
 fun ApplicationNavigationHost(navController: NavHostController, modifier: Modifier) {
-    NavHost(navController = navController, startDestination = "trips/1",
+    NavHost(navController = navController, startDestination = "home",
         modifier = modifier) {
         composable("home") {
             HomeScreen(
-                onNavigateToNewProject = { navController.navigate("new_project") },
-                onProjectClick = { navController.navigate("date_selection") },
-                onEditProject = { navController.navigate("new_project") }, // 編集時も新規作成画面に遷移
+                onNavigateToNewProject = { navController.navigate("trips/new") },
+                onProjectClick = { navController.navigate("trips/abc123/date-selection") },
+                onEditProject = { },
                 onDeleteProject = { /* TODO: ViewModelと連携して削除処理を実装 */ }
             )
         }
@@ -66,32 +68,44 @@ fun ApplicationNavigationHost(navController: NavHostController, modifier: Modifi
                         popUpTo("new_project") { inclusive = true }
                     }
                 },
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.navigate("home") }
             )
         }
         composable(
-            route = "trips/{id}?tab={tab}",
+            route = "trips/{id}/date-selection",
             arguments = listOf(
                 navArgument("id") { type = NavType.StringType },
-                navArgument("tab") {
-                    type = NavType.StringType
-                    defaultValue = "timeline"
-                }
             )
         ) { backstackEntry ->
             val id = backstackEntry.arguments?.getString("id")
-            val tab = backstackEntry.arguments?.getString("tab")
-            TripTimelineScreen(
-                onNavigateBack = {},
-                onNavigateToMap = {}
+            TripsDateSelectionScreen(
+                onNavigateBack = { navController.navigate("home") },
+                onNavigateToMap = { navController.navigate("trips/${id}?tab=map") }
             )
         }
-//        composable(
-//            route = "trips/{id}",
-//            arguments = listOf(navArgument("id") { type = NavType.IntType })
-//        ) { backStackEntry ->
-//            // 現在はTripScreenを呼び出すだけだが、将来的にはここでViewModelの初期化などを行う
-//            TripScreen()
-//        }
+        composable(
+            route = "trips/{id}?tab=timeline",
+            arguments = listOf(
+                navArgument("id") { type = NavType.StringType },
+            )
+        ) { backstackEntry ->
+            val id = backstackEntry.arguments?.getString("id")
+            TripTimelineScreen(
+                onNavigateBack = { navController.navigate("trips/${id}/date-selection") },
+                onNavigateToMap = { navController.navigate("trips/${id}?tab=map") }
+            )
+        }
+        composable(
+            route = "trips/{id}?tab=map",
+            arguments = listOf(
+                navArgument("id") { type = NavType.StringType },
+            )
+        ) { backstackEntry ->
+            val id = backstackEntry.arguments?.getString("id")
+            TripMapScreen(
+                onNavigateBack = { navController.navigate("trips/${id}/date-selection") },
+                onNavigateToTimeline = { navController.navigate("trips/${id}?tab=timeline") }
+            )
+        }
     }
 }

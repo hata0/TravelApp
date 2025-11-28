@@ -30,7 +30,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MapScreen(
+fun TripMapScreen(
     onNavigateToTimeline: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
@@ -83,6 +83,6 @@ fun MapScreen(
  */
 @Preview(showBackground = true)
 @Composable
-fun MapScreenPreview() {
-    MapScreen(onNavigateToTimeline = {}, onNavigateBack = {})
+fun TripMapScreenPreview() {
+    TripMapScreen(onNavigateToTimeline = {}, onNavigateBack = {})
 }

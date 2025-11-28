@@ -1,4 +1,4 @@
-package com.hata.travelapp.internal.ui.android.trip.view
+package com.hata.travelapp.internal.ui.android.trips_date_selection.view
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -26,7 +25,7 @@ import androidx.compose.ui.unit.dp
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DateSelectionScreen(
+fun TripsDateSelectionScreen(
     onNavigateToMap: (String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
@@ -73,6 +72,6 @@ fun DateSelectionScreen(
  */
 @Preview(showBackground = true)
 @Composable
-fun DateSelectionScreenPreview() {
-    DateSelectionScreen(onNavigateToMap = {}, onNavigateBack = {})
+fun TripsDateSelectionScreenPreview() {
+    TripsDateSelectionScreen(onNavigateToMap = {}, onNavigateBack = {})
 }
