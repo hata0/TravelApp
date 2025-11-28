@@ -84,4 +84,5 @@ dependencies {
     debugImplementation(libs.showkase)
     implementation(libs.showkase.annotation)
     kspDebug(libs.showkase.processor)
+    implementation("androidx.compose.ui:ui-text-google-fonts:1.6.6")
 }

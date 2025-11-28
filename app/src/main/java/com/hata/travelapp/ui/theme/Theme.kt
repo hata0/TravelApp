@@ -80,6 +80,7 @@ fun TravelAppTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = Shapes, // ここで作成したShapesを適用
         content = content
     )
 }
