@@ -1,10 +1,12 @@
 package com.hata.travelapp.internal.ui.android.trip_timeline.view
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -40,9 +43,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.hata.travelapp.R
 
 /**
  * タイムラインの各項目を表すデータ構造。
@@ -132,36 +139,58 @@ fun TripTimelineScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onNavigateToMap) {
+            FloatingActionButton(
+                onClick = onNavigateToMap,
+                shape = MaterialTheme.shapes.large // 葉っぱ型を適用
+            ) {
                 Icon(Icons.Default.Map, contentDescription = "マップへ")
             }
         }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 16.dp),
-        ) {
-            itemsIndexed(timelineItems) { index, item ->
-                when (item) {
-                    is TimelineItem.StartPoint -> StartPointCard(
-                        item = item,
-                        onDepartureTimeClick = {
-                            editingItemIndex = index
-                            isEditingStayTime = false
-                            showTimePicker = true
-                        }
-                    )
-                    is TimelineItem.Destination -> DestinationCard(
-                        item = item,
-                        onStayTimeClick = {
-                            editingItemIndex = index
-                            isEditingStayTime = true
-                            showTimePicker = true
-                        }
-                    )
-                    is TimelineItem.EndPoint -> EndPointCard(item)
-                    is TimelineItem.Travel -> TravelInfo(item)
+        Box(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp),
+                contentPadding = PaddingValues(bottom = 80.dp) // FABと被らないように余白を追加
+            ) {
+                itemsIndexed(timelineItems) { index, item ->
+                    when (item) {
+                        is TimelineItem.StartPoint -> StartPointCard(
+                            item = item,
+                            onDepartureTimeClick = {
+                                editingItemIndex = index
+                                isEditingStayTime = false
+                                showTimePicker = true
+                            }
+                        )
+                        is TimelineItem.Destination -> DestinationCard(
+                            item = item,
+                            onStayTimeClick = {
+                                editingItemIndex = index
+                                isEditingStayTime = true
+                                showTimePicker = true
+                            }
+                        )
+                        is TimelineItem.EndPoint -> EndPointCard(item)
+                        is TimelineItem.Travel -> TravelInfo(item)
+                    }
                 }
             }
+
+            // 左下のキャラクター画像 (Char2)
+            Image(
+                painter = painterResource(id = R.drawable.char2),
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp)
+                    .padding(bottom = 80.dp) // FABと重ならないように少し上に配置
+                    .size(200.dp) // 150.dp -> 200.dp
+                    .clip(MaterialTheme.shapes.medium)
+                    .alpha(0.9f)
+            )
         }
     }
 }
