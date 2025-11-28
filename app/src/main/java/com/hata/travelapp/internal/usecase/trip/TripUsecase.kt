@@ -9,4 +9,5 @@ interface TripUsecase {
     suspend fun create(title: String, startedAt: LocalDateTime, endedAt: LocalDateTime)
     suspend fun update(id: String, title: String, startedAt: LocalDateTime, endedAt: LocalDateTime)
     suspend fun delete(id: String)
+    suspend fun calculateTravelTimes(tripId: TripId)
 }
