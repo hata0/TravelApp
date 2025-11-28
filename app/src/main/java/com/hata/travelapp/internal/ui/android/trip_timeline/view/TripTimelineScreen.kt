@@ -65,7 +65,7 @@ sealed interface TimelineItem {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimelineScreen(
+fun TripTimelineScreen(
     onNavigateToMap: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
@@ -279,6 +279,6 @@ fun TravelInfo(item: TimelineItem.Travel) {
  */
 @Preview(showBackground = true)
 @Composable
-fun TimelineScreenPreview() {
-    TimelineScreen(onNavigateToMap = {}, onNavigateBack = {})
+fun TripTimelineScreenPreview() {
+    TripTimelineScreen(onNavigateToMap = {}, onNavigateBack = {})
 }

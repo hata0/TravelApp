@@ -1,0 +1,18 @@
+package com.hata.travelapp
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import com.airbnb.android.showkase.annotation.ShowkaseRoot
+import com.airbnb.android.showkase.annotation.ShowkaseRootModule
+import com.airbnb.android.showkase.models.Showkase
+
+class ShowkaseBrowserActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        startActivity(Showkase.getBrowserIntent(this))
+        finish()
+    }
+}
+
+@ShowkaseRoot
+class ShowkaseRootModule: ShowkaseRootModule

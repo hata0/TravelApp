@@ -10,10 +10,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.hata.travelapp.internal.ui.android.home.view.HomeScreen
+import com.hata.travelapp.internal.ui.android.trip_timeline.view.TripTimelineScreen
 import com.hata.travelapp.internal.ui.android.trips_new.view.TripsNewScreen
 import com.hata.travelapp.ui.theme.TravelAppTheme
 
@@ -46,7 +49,7 @@ class MainActivity : ComponentActivity() {
  */
 @Composable
 fun ApplicationNavigationHost(navController: NavHostController, modifier: Modifier) {
-    NavHost(navController = navController, startDestination = "trips/new",
+    NavHost(navController = navController, startDestination = "trips/1",
         modifier = modifier) {
         composable("home") {
             HomeScreen(
@@ -64,6 +67,23 @@ fun ApplicationNavigationHost(navController: NavHostController, modifier: Modifi
                     }
                 },
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(
+            route = "trips/{id}?tab={tab}",
+            arguments = listOf(
+                navArgument("id") { type = NavType.StringType },
+                navArgument("tab") {
+                    type = NavType.StringType
+                    defaultValue = "timeline"
+                }
+            )
+        ) { backstackEntry ->
+            val id = backstackEntry.arguments?.getString("id")
+            val tab = backstackEntry.arguments?.getString("tab")
+            TripTimelineScreen(
+                onNavigateBack = {},
+                onNavigateToMap = {}
             )
         }
 //        composable(
