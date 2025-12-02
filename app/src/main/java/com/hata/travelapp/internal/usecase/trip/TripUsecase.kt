@@ -6,7 +6,8 @@ import java.time.LocalDateTime
 
 interface TripUsecase {
     suspend fun getTripList(): List<Trip>
-    suspend fun create(title: String, startedAt: LocalDateTime, endedAt: LocalDateTime)
+    suspend fun getById(tripId: TripId): Trip?
+    suspend fun create(title: String, startedAt: LocalDateTime, endedAt: LocalDateTime): TripId
     suspend fun update(id: String, title: String, startedAt: LocalDateTime, endedAt: LocalDateTime)
     suspend fun delete(id: String)
     suspend fun calculateTravelTimes(tripId: TripId)

@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import java.time.Instant
+import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -42,7 +43,7 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripsNewScreen(
-    onNavigateToDateSelection: () -> Unit,
+    onNavigateToDateSelection: (title: String, startDate: LocalDateTime, endDate: LocalDateTime) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     // TODO: ViewModelに状態管理を移行する
@@ -141,8 +142,19 @@ fun TripsNewScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
-                onClick = onNavigateToDateSelection,
-                modifier = Modifier.fillMaxWidth()
+                onClick = {
+                    val start = startDate
+                    val end = endDate
+                    if (projectName.isNotBlank() && start != null && end != null) {
+                        onNavigateToDateSelection(
+                            projectName,
+                            Instant.ofEpochMilli(start).atZone(ZoneId.systemDefault()).toLocalDateTime(),
+                            Instant.ofEpochMilli(end).atZone(ZoneId.systemDefault()).toLocalDateTime()
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = projectName.isNotBlank() && startDate != null && endDate != null
             ) {
                 Text("作成") // TODO: 編集モードの場合は「変更を保存」に変更
             }
@@ -186,5 +198,8 @@ private fun DateRow(
 @Preview(showBackground = true)
 @Composable
 fun NewProjectScreenPreview() {
-    TripsNewScreen(onNavigateToDateSelection = {}, onNavigateBack = {})
+    TripsNewScreen(
+        onNavigateToDateSelection = { _, _, _ -> },
+        onNavigateBack = {}
+    )
 }

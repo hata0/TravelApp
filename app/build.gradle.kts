@@ -78,6 +78,12 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
+
+    // Retrofit for API communication
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
     implementation(libs.play.services.maps)
     implementation(libs.maps.compose)
     implementation(libs.androidx.material.icons.extended)

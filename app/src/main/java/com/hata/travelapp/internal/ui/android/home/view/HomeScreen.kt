@@ -33,11 +33,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.hata.travelapp.internal.domain.trip.Trip
+import com.hata.travelapp.internal.domain.trip.TripId
+import java.time.LocalDateTime
 
 /**
  * アプリのホーム画面。
  * 作成済みのプロジェクトリストと、新規作成ボタン（FAB）を表示する。
  *
+ * @param projects 表示する旅行プロジェクトのリスト。
  * @param onNavigateToNewProject 新規作成ボタンがクリックされたときのコールバック。
  * @param onProjectClick プロジェクトリストの項目がクリックされたときのコールバック。
  * @param onEditProject 「編集」メニューがクリックされたときのコールバック。
@@ -45,14 +49,12 @@ import androidx.compose.ui.unit.dp
  */
 @Composable
 fun HomeScreen(
+    projects: List<Trip>,
     onNavigateToNewProject: () -> Unit,
     onProjectClick: (String) -> Unit,
     onEditProject: (String) -> Unit,
     onDeleteProject: (String) -> Unit
 ) {
-    // TODO: ViewModelから実際のプロジェクトリストを取得するように変更する
-    val projects = listOf("北海道旅行", "沖縄旅行", "九州一周")
-
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = onNavigateToNewProject) {
@@ -91,7 +93,7 @@ fun HomeScreen(
  */
 @Composable
 private fun ProjectCard(
-    project: String,
+    project: Trip,
     onProjectClick: (String) -> Unit,
     onEditProject: (String) -> Unit,
     onDeleteProject: (String) -> Unit
@@ -102,13 +104,13 @@ private fun ProjectCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onProjectClick(project) }
+                .clickable { onProjectClick(project.id.value) } // Pass the ID, not the title
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = project,
+                text = project.title, // Display the title
                 modifier = Modifier.weight(1f)
             )
             Box {
@@ -122,14 +124,14 @@ private fun ProjectCard(
                     DropdownMenuItem(
                         text = { Text("編集") },
                         onClick = {
-                            onEditProject(project)
+                            onEditProject(project.id.value) // Pass the ID
                             menuExpanded = false
                         }
                     )
                     DropdownMenuItem(
                         text = { Text("削除") },
                         onClick = {
-                            onDeleteProject(project)
+                            onDeleteProject(project.id.value) // Pass the ID
                             menuExpanded = false
                         }
                     )
@@ -146,7 +148,30 @@ private fun ProjectCard(
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
+    val dummyTrips = listOf(
+        Trip(
+            id = TripId("1"),
+            title = "北海道旅行",
+            startedAt = LocalDateTime.now(),
+            endedAt = LocalDateTime.now(),
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
+            destinations = emptyList(),
+            transportations = emptyList()
+        ),
+        Trip(
+            id = TripId("2"),
+            title = "沖縄旅行",
+            startedAt = LocalDateTime.now(),
+            endedAt = LocalDateTime.now(),
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now(),
+            destinations = emptyList(),
+            transportations = emptyList()
+        )
+    )
     HomeScreen(
+        projects = dummyTrips,
         onNavigateToNewProject = {},
         onProjectClick = {},
         onEditProject = {},

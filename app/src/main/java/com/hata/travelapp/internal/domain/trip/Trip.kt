@@ -9,9 +9,10 @@ data class Trip(
     val endedAt: LocalDateTime,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
-    val destinations: List<Destination>
+    val destinations: List<Destination>,
+    val transportations: List<Transportation>
 ){
-    fun update(title: String, startedAt: LocalDateTime, endedAt: LocalDateTime, updatedAt: LocalDateTime, destinations: List<Destination>): Trip {
-        return this.copy(title = title, startedAt = startedAt, endedAt = endedAt, updatedAt = updatedAt, destinations = destinations)
+    fun update(title: String, startedAt: LocalDateTime, endedAt: LocalDateTime, updatedAt: LocalDateTime, destinations: List<Destination>, transportations: List<Transportation>): Trip {
+        return this.copy(title = title, startedAt = startedAt, endedAt = endedAt, updatedAt = updatedAt, destinations = destinations, transportations = transportations)
     }
 }
