@@ -33,6 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hata.travelapp.internal.domain.trip.Trip
 import com.hata.travelapp.internal.domain.trip.TripId
 import java.time.LocalDateTime
@@ -40,15 +42,32 @@ import java.time.LocalDateTime
 /**
  * アプリのホーム画面。
  * 作成済みのプロジェクトリストと、新規作成ボタン（FAB）を表示する。
- *
- * @param projects 表示する旅行プロジェクトのリスト。
- * @param onNavigateToNewProject 新規作成ボタンがクリックされたときのコールバック。
- * @param onProjectClick プロジェクトリストの項目がクリックされたときのコールバック。
- * @param onEditProject 「編集」メニューがクリックされたときのコールバック。
- * @param onDeleteProject 「削除」メニューがクリックされたときのコールバック。
  */
 @Composable
 fun HomeScreen(
+    viewModel: HomeViewModel = hiltViewModel(),
+    onNavigateToNewProject: () -> Unit,
+    onProjectClick: (String) -> Unit,
+    onEditProject: (String) -> Unit,
+    onDeleteProject: (String) -> Unit
+) {
+    val projects by viewModel.projects.collectAsStateWithLifecycle()
+
+    HomeScreenContent(
+        projects = projects,
+        onNavigateToNewProject = onNavigateToNewProject,
+        onProjectClick = onProjectClick,
+        onEditProject = onEditProject,
+        onDeleteProject = onDeleteProject
+    )
+}
+
+/**
+ * `HomeScreen`の実際のUIコンテンツ。
+ * 状態を持つ`HomeScreen`から分離することで、プレビューやテストが容易になる。
+ */
+@Composable
+private fun HomeScreenContent(
     projects: List<Trip>,
     onNavigateToNewProject: () -> Unit,
     onProjectClick: (String) -> Unit,
@@ -89,7 +108,6 @@ fun HomeScreen(
 
 /**
  * プロジェクト情報を表示するカードUI。
- * プロジェクト名と、編集・削除のためのケバブメニューを持つ。
  */
 @Composable
 private fun ProjectCard(
@@ -104,13 +122,13 @@ private fun ProjectCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onProjectClick(project.id.value) } // Pass the ID, not the title
+                .clickable { onProjectClick(project.id.value) }
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = project.title, // Display the title
+                text = project.title,
                 modifier = Modifier.weight(1f)
             )
             Box {
@@ -124,14 +142,14 @@ private fun ProjectCard(
                     DropdownMenuItem(
                         text = { Text("編集") },
                         onClick = {
-                            onEditProject(project.id.value) // Pass the ID
+                            onEditProject(project.id.value)
                             menuExpanded = false
                         }
                     )
                     DropdownMenuItem(
                         text = { Text("削除") },
                         onClick = {
-                            onDeleteProject(project.id.value) // Pass the ID
+                            onDeleteProject(project.id.value)
                             menuExpanded = false
                         }
                     )
@@ -141,36 +159,14 @@ private fun ProjectCard(
     }
 }
 
-
-/**
- * `HomeScreen`のプレビュー用Composable。
- */
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
     val dummyTrips = listOf(
-        Trip(
-            id = TripId("1"),
-            title = "北海道旅行",
-            startedAt = LocalDateTime.now(),
-            endedAt = LocalDateTime.now(),
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now(),
-            destinations = emptyList(),
-            transportations = emptyList()
-        ),
-        Trip(
-            id = TripId("2"),
-            title = "沖縄旅行",
-            startedAt = LocalDateTime.now(),
-            endedAt = LocalDateTime.now(),
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now(),
-            destinations = emptyList(),
-            transportations = emptyList()
-        )
+        Trip(id = TripId("1"), title = "北海道旅行", startedAt = LocalDateTime.now(), endedAt = LocalDateTime.now(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), destinations = emptyList(), transportations = emptyList()),
+        Trip(id = TripId("2"), title = "沖縄旅行", startedAt = LocalDateTime.now(), endedAt = LocalDateTime.now(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), destinations = emptyList(), transportations = emptyList())
     )
-    HomeScreen(
+    HomeScreenContent(
         projects = dummyTrips,
         onNavigateToNewProject = {},
         onProjectClick = {},

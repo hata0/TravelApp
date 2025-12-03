@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DirectionsBus
@@ -23,7 +22,6 @@ import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Train
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -37,40 +35,58 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hata.travelapp.internal.domain.route.Route
 import com.hata.travelapp.internal.domain.route.RouteLeg
 import com.hata.travelapp.internal.domain.route.ScheduledStop
+import com.hata.travelapp.internal.domain.trip.Destination
+import com.hata.travelapp.internal.domain.trip.DestinationId
 import com.hata.travelapp.internal.domain.trip.Transportation
+import com.hata.travelapp.internal.domain.trip.TransportationId
 import com.hata.travelapp.internal.domain.trip.TransportationType
 import com.hata.travelapp.internal.domain.trip.TripId
-import com.hata.travelapp.internal.usecase.route.GenerateRouteUseCase
+import java.time.Duration
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripTimelineScreen(
+    viewModel: TripTimelineViewModel = hiltViewModel(),
     tripId: TripId,
-    generateRouteUseCase: GenerateRouteUseCase,
     onNavigateToMap: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    var route by remember { mutableStateOf<Route?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
+    val route by viewModel.route.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
 
-    // tripIdが変更されたときに、Usecaseを実行してRouteオブジェクトを生成する
+    // tripIdが変更されたときに、ViewModelにデータの読み込みを指示する
     LaunchedEffect(tripId) {
-        isLoading = true
-        route = generateRouteUseCase.execute(tripId)
-        isLoading = false
+        viewModel.loadRoute(tripId)
     }
 
+    TripTimelineContent(
+        route = route,
+        isLoading = isLoading,
+        onNavigateToMap = onNavigateToMap,
+        onNavigateBack = onNavigateBack
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TripTimelineContent(
+    route: Route?,
+    isLoading: Boolean,
+    onNavigateToMap: () -> Unit,
+    onNavigateBack: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -93,19 +109,18 @@ fun TripTimelineScreen(
                 CircularProgressIndicator()
             }
         } else if (route != null) {
-            val currentRoute = route!!
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
                     .padding(horizontal = 16.dp),
             ) {
-                items(currentRoute.stops.size) { index ->
-                    val stop = currentRoute.stops[index]
+                items(route.stops.size) { index ->
+                    val stop = route.stops[index]
                     DestinationCard(stop)
 
                     // 次の目的地への移動区間があれば表示
-                    currentRoute.legs.getOrNull(index)?.let {
+                    route.legs.getOrNull(index)?.let {
                         LegInfo(it)
                     }
                 }
@@ -178,4 +193,36 @@ fun TransportationInfo(transportation: Transportation) {
         Spacer(modifier = Modifier.width(8.dp))
         Text("${transportation.durationInMinutes} 分")
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TripTimelineScreenPreview() {
+    val dummyDestination1 = Destination(DestinationId("1"), "東京駅", 35.68, 139.76, 60, LocalDateTime.now(), LocalDateTime.now())
+    val dummyDestination2 = Destination(DestinationId("2"), "新大阪駅", 34.73, 135.50, 120, LocalDateTime.now(), LocalDateTime.now())
+
+    val dummyRoute = Route(
+        stops = listOf(
+            ScheduledStop(dummyDestination1, LocalDateTime.now(), LocalDateTime.now().plusHours(1)),
+            ScheduledStop(dummyDestination2, LocalDateTime.now().plusHours(4), LocalDateTime.now().plusHours(6))
+        ),
+        legs = listOf(
+            RouteLeg(
+                from = dummyDestination1,
+                to = dummyDestination2,
+                duration = Duration.ofHours(3),
+                polyline = "",
+                steps = listOf(
+                    Transportation(TransportationId("s1"), TripId("t1"), dummyDestination1.id, dummyDestination2.id, TransportationType.TRAIN, 180, LocalDateTime.now(), LocalDateTime.now())
+                )
+            )
+        )
+    )
+
+    TripTimelineContent(
+        route = dummyRoute,
+        isLoading = false,
+        onNavigateToMap = {},
+        onNavigateBack = {}
+    )
 }

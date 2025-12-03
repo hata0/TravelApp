@@ -1,7 +1,14 @@
 package com.hata.travelapp.internal.ui.android.trips_new.view
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -19,6 +26,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,32 +36,67 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.collectLatest
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /**
- * 新規旅行プロジェクトの作成・編集画面。
- * プロジェクト名、出発日、帰宅日、説明を入力する。
- *
- * @param onNavigateToDateSelection 「作成」または「変更を保存」ボタンがクリックされたときのコールバック。
- * @param onNavigateBack 戻るボタンがクリックされたときのコールバック。
+ * 新規旅行プロジェクトの作成・編集画面のエントリーポイント。
+ * ViewModelの取得と、ナビゲーションイベントの処理を担当する。
+ */
+@Composable
+fun TripsNewScreen(
+    viewModel: TripsNewViewModel = hiltViewModel(),
+    onNavigateToTrip: (String) -> Unit,
+    onNavigateBack: () -> Unit
+) {
+    val projectName by viewModel.projectName.collectAsStateWithLifecycle()
+    val startDate by viewModel.startDate.collectAsStateWithLifecycle()
+    val endDate by viewModel.endDate.collectAsStateWithLifecycle()
+
+    // ViewModelからのナビゲーションイベントを監視
+    LaunchedEffect(Unit) {
+        viewModel.navigateToTrip.collectLatest { tripId ->
+            onNavigateToTrip(tripId)
+        }
+    }
+
+    TripsNewScreenContent(
+        projectName = projectName,
+        startDate = startDate,
+        endDate = endDate,
+        onProjectNameChange = viewModel::onProjectNameChange,
+        onStartDateChange = viewModel::onStartDateChange,
+        onEndDateChange = viewModel::onEndDateChange,
+        onCreateClick = viewModel::createTrip,
+        onNavigateBack = onNavigateBack
+    )
+}
+
+/**
+ * `TripsNewScreen`の実際のUIコンテンツ。
+ * 状態を持たないComposableにすることで、プレビューやテストが容易になる。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TripsNewScreen(
-    onNavigateToDateSelection: (title: String, startDate: LocalDateTime, endDate: LocalDateTime) -> Unit,
+private fun TripsNewScreenContent(
+    projectName: String,
+    startDate: LocalDateTime?,
+    endDate: LocalDateTime?,
+    onProjectNameChange: (String) -> Unit,
+    onStartDateChange: (LocalDateTime) -> Unit,
+    onEndDateChange: (LocalDateTime) -> Unit,
+    onCreateClick: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    // TODO: ViewModelに状態管理を移行する
-    var projectName by remember { mutableStateOf("") }
-    var startDate by remember { mutableStateOf<Long?>(null) }
-    var endDate by remember { mutableStateOf<Long?>(null) }
+    // DatePickerの表示状態はUI固有の状態なので、ここでrememberする
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
-
-    val dateFormatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日(E)")
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("yyyy年MM月dd日(E)") }
 
     // 出発日選択ダイアログ
     if (showStartDatePicker) {
@@ -63,7 +106,9 @@ fun TripsNewScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        startDate = datePickerState.selectedDateMillis
+                        datePickerState.selectedDateMillis?.let {
+                            onStartDateChange(Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDateTime())
+                        }
                         showStartDatePicker = false
                     }
                 ) { Text("OK") }
@@ -80,7 +125,9 @@ fun TripsNewScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        endDate = datePickerState.selectedDateMillis
+                        datePickerState.selectedDateMillis?.let {
+                            onEndDateChange(Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDateTime())
+                        }
                         showEndDatePicker = false
                     }
                 ) { Text("OK") }
@@ -109,7 +156,7 @@ fun TripsNewScreen(
         ) {
             TextField(
                 value = projectName,
-                onValueChange = { projectName = it },
+                onValueChange = onProjectNameChange,
                 label = { Text("タイトル") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -142,17 +189,7 @@ fun TripsNewScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
-                onClick = {
-                    val start = startDate
-                    val end = endDate
-                    if (projectName.isNotBlank() && start != null && end != null) {
-                        onNavigateToDateSelection(
-                            projectName,
-                            Instant.ofEpochMilli(start).atZone(ZoneId.systemDefault()).toLocalDateTime(),
-                            Instant.ofEpochMilli(end).atZone(ZoneId.systemDefault()).toLocalDateTime()
-                        )
-                    }
-                },
+                onClick = onCreateClick,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = projectName.isNotBlank() && startDate != null && endDate != null
             ) {
@@ -165,7 +202,7 @@ fun TripsNewScreen(
 @Composable
 private fun DateRow(
     label: String,
-    selectedDate: Long?,
+    selectedDate: LocalDateTime?,
     dateFormatter: DateTimeFormatter,
     onClick: () -> Unit,
 ) {
@@ -175,7 +212,6 @@ private fun DateRow(
             .clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-
         Row(
             modifier = Modifier.fillMaxWidth().padding(start = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -183,23 +219,24 @@ private fun DateRow(
         ) {
             Text(label, style = MaterialTheme.typography.titleMedium)
             Text(
-                text = selectedDate?.let {
-                    Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate().format(dateFormatter)
-                } ?: "日付を選択",
+                text = selectedDate?.format(dateFormatter) ?: "日付を選択",
                 style = MaterialTheme.typography.bodyLarge
             )
         }
     }
 }
 
-/**
- * `NewProjectScreen`のプレビュー用Composable。
- */
 @Preview(showBackground = true)
 @Composable
-fun NewProjectScreenPreview() {
-    TripsNewScreen(
-        onNavigateToDateSelection = { _, _, _ -> },
+fun TripsNewScreenPreview() {
+    TripsNewScreenContent(
+        projectName = "北海道旅行",
+        startDate = LocalDateTime.now(),
+        endDate = LocalDateTime.now().plusDays(3),
+        onProjectNameChange = {},
+        onStartDateChange = {},
+        onEndDateChange = {},
+        onCreateClick = {},
         onNavigateBack = {}
     )
 }

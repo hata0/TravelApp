@@ -5,16 +5,19 @@ import androidx.lifecycle.viewModelScope
 import com.hata.travelapp.internal.domain.route.Route
 import com.hata.travelapp.internal.domain.trip.TripId
 import com.hata.travelapp.internal.usecase.route.GenerateRouteUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * `TripTimelineScreen`のためのViewModel。
  * UIの状態（計算済みのルート）を保持し、ビジネスロジック（Usecase）とのやり取りを担当する。
  */
-class TripTimelineViewModel(
+@HiltViewModel
+class TripTimelineViewModel @Inject constructor(
     private val generateRouteUseCase: GenerateRouteUseCase
 ) : ViewModel() {
 
