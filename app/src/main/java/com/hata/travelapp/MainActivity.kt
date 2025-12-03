@@ -31,6 +31,8 @@ import com.hata.travelapp.internal.domain.trip.TripRepository
 import com.hata.travelapp.internal.ui.android.home.view.HomeScreen
 import com.hata.travelapp.internal.ui.android.trip_timeline.view.TripTimelineScreen
 import com.hata.travelapp.internal.ui.android.trips_new.view.TripsNewScreen
+import com.hata.travelapp.internal.usecase.route.GenerateRouteUseCase
+import com.hata.travelapp.internal.usecase.route.GenerateRouteUseCaseImpl
 import com.hata.travelapp.internal.usecase.trip.TripInteractor
 import com.hata.travelapp.internal.usecase.trip.TripUsecase
 import com.hata.travelapp.ui.theme.TravelAppTheme
@@ -54,7 +56,6 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
 
                 // --- 依存性の構築（DIコンテナの代わり） ---
-                // APIクライアントのセットアップ
                 val json = Json { ignoreUnknownKeys = true }
                 val okHttpClient = OkHttpClient.Builder().build()
                 val retrofit = Retrofit.Builder()
@@ -63,21 +64,22 @@ class MainActivity : ComponentActivity() {
                     .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
                     .build()
 
-                // 各Repositoryの実装を生成
                 val tripRepository: TripRepository = FakeTripRepository()
                 val directionsRepository: DirectionsRepository = GoogleDirectionsRepositoryImpl(
                     apiService = retrofit.create(DirectionsApiService::class.java),
                     apiKey = "" // TODO: APIキーをBuildConfigから取得する
                 )
 
-                // Usecaseに、利用するRepositoryを注入
+                // Usecaseをインスタンス化
                 val tripUsecase: TripUsecase = TripInteractor(tripRepository, directionsRepository)
+                val generateRouteUseCase: GenerateRouteUseCase = GenerateRouteUseCaseImpl(tripRepository, directionsRepository)
 
                 Scaffold( modifier = Modifier.fillMaxSize() ) { innerPadding ->
                     ApplicationNavigationHost(
                         navController = navController,
                         modifier = Modifier.padding(innerPadding),
-                        tripUsecase = tripUsecase
+                        tripUsecase = tripUsecase,
+                        generateRouteUseCase = generateRouteUseCase // 新しいUsecaseを渡す
                     )
                 }
             }
@@ -87,16 +89,13 @@ class MainActivity : ComponentActivity() {
 
 /**
  * アプリケーション全体のナビゲーションホストを定義するComposable。
- *
- * @param navController アプリケーション全体のナビゲーションを管理するコントローラー。
- * @param modifier このComposableに適用されるModifier。
- * @param tripUsecase 旅行関連のビジネスロジックをカプセル化したUsecase。
  */
 @Composable
 fun ApplicationNavigationHost(
     navController: NavHostController,
     modifier: Modifier,
-    tripUsecase: TripUsecase // Usecaseを引数で受け取る
+    tripUsecase: TripUsecase,
+    generateRouteUseCase: GenerateRouteUseCase // 新しいUsecaseを受け取る
 ) {
     val scope = rememberCoroutineScope()
     NavHost(navController = navController, startDestination = "home",
@@ -104,7 +103,6 @@ fun ApplicationNavigationHost(
         composable("home") {
             var projects by remember { mutableStateOf(emptyList<Trip>()) }
 
-            // Usecaseから旅行リストを取得する
             LaunchedEffect(Unit) {
                 projects = tripUsecase.getTripList()
             }
@@ -112,15 +110,9 @@ fun ApplicationNavigationHost(
             HomeScreen(
                 projects = projects,
                 onNavigateToNewProject = { navController.navigate("trips/new") },
-                onProjectClick = { projectId ->
-                    // クリックされたプロジェクトのIDを渡してタイムライン画面に遷移
-                    navController.navigate("trips/$projectId")
-                },
-                onEditProject = { projectId ->
-                     // TODO: 編集画面への遷移を実装
-                    navController.navigate("trips/new?projectId=$projectId")
-                },
-                onDeleteProject = { /* TODO: ViewModelと連携して削除処理を実装 */ }
+                onProjectClick = { projectId -> navController.navigate("trips/$projectId") },
+                onEditProject = { projectId -> navController.navigate("trips/new?projectId=$projectId") },
+                onDeleteProject = { /* TODO */ }
             )
         }
         composable("trips/new") {
@@ -141,13 +133,12 @@ fun ApplicationNavigationHost(
             )
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getString("id")
-            // idがnullでないことを確認してからTripIdを作成
             id?.let {
                 TripTimelineScreen(
                     tripId = TripId(it),
-                    tripUsecase = tripUsecase, // Usecaseを渡す
+                    generateRouteUseCase = generateRouteUseCase, // 新しいUsecaseを渡す
                     onNavigateBack = { navController.popBackStack() },
-                    onNavigateToMap = { /* TODO: マップ画面への遷移を実装 */ }
+                    onNavigateToMap = { /* TODO */ }
                 )
             }
         }

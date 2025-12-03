@@ -24,9 +24,33 @@ class FakeTripRepository : TripRepository {
                 createdAt = LocalDateTime.now(),
                 updatedAt = LocalDateTime.now(),
                 destinations = listOf(
-                    Destination(DestinationId("1"), "札幌", 43.06, 135.35, LocalDateTime.now(), LocalDateTime.now()),
-                    Destination(DestinationId("2"), "小樽", 43.19, 140.99, LocalDateTime.now(), LocalDateTime.now()),
-                    Destination(DestinationId("3"), "函館", 41.76, 140.72, LocalDateTime.now(), LocalDateTime.now())
+                    Destination(
+                        id = DestinationId("1"),
+                        name = "札幌",
+                        latitude = 43.06,
+                        longitude = 135.35,
+                        stayDurationInMinutes = 60,
+                        createdAt = LocalDateTime.now(),
+                        updatedAt = LocalDateTime.now()
+                    ),
+                    Destination(
+                        id = DestinationId("2"),
+                        name = "小樽",
+                        latitude = 43.19,
+                        longitude = 140.99,
+                        stayDurationInMinutes = 120,
+                        createdAt = LocalDateTime.now(),
+                        updatedAt = LocalDateTime.now()
+                    ),
+                    Destination(
+                        id = DestinationId("3"),
+                        name = "函館",
+                        latitude = 41.76,
+                        longitude = 140.72,
+                        stayDurationInMinutes = 90,
+                        createdAt = LocalDateTime.now(),
+                        updatedAt = LocalDateTime.now()
+                    )
                 ),
                 transportations = emptyList()
             )

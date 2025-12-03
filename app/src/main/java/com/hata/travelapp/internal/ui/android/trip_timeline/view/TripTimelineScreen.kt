@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Train
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -35,106 +36,45 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.hata.travelapp.internal.domain.trip.Destination
+import com.hata.travelapp.internal.domain.route.Route
+import com.hata.travelapp.internal.domain.route.RouteLeg
+import com.hata.travelapp.internal.domain.route.ScheduledStop
 import com.hata.travelapp.internal.domain.trip.Transportation
 import com.hata.travelapp.internal.domain.trip.TransportationType
-import com.hata.travelapp.internal.domain.trip.Trip
 import com.hata.travelapp.internal.domain.trip.TripId
-import com.hata.travelapp.internal.usecase.trip.TripUsecase
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import java.time.LocalDateTime
+import com.hata.travelapp.internal.usecase.route.GenerateRouteUseCase
 import java.time.format.DateTimeFormatter
-
-// --- 表示用モデル ---
-sealed interface TimelineRowModel {
-    data class DestinationItem(val destination: Destination, val type: DestinationType, val time: LocalDateTime) : TimelineRowModel
-    data class TransportationItem(val transportation: Transportation) : TimelineRowModel
-}
-enum class DestinationType {
-    START, MIDDLE, END
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripTimelineScreen(
     tripId: TripId,
-    tripUsecase: TripUsecase,
+    generateRouteUseCase: GenerateRouteUseCase,
     onNavigateToMap: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    var trip by remember { mutableStateOf<Trip?>(null) }
+    var route by remember { mutableStateOf<Route?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
 
-    val timelineRows by remember {
-        derivedStateOf {
-            val currentTrip = trip ?: return@derivedStateOf emptyList<TimelineRowModel>()
-            if (currentTrip.destinations.isEmpty()) return@derivedStateOf emptyList<TimelineRowModel>()
-
-            val rows = mutableListOf<TimelineRowModel>()
-            var runningTime = currentTrip.startedAt
-
-            currentTrip.destinations.forEachIndexed { index, destination ->
-                // Add the destination card. The arrival time is the runningTime calculated from the *previous* step.
-                val destinationType = when (index) {
-                    0 -> DestinationType.START
-                    currentTrip.destinations.lastIndex -> DestinationType.END
-                    else -> DestinationType.MIDDLE
-                }
-                rows.add(TimelineRowModel.DestinationItem(destination, destinationType, runningTime))
-
-
-                // If this is not the last destination, find the transportations to the next one.
-                if (index < currentTrip.destinations.lastIndex) {
-                    val nextDestination = currentTrip.destinations[index + 1]
-                    val stepsToNext = currentTrip.transportations.filter {
-                        it.fromDestinationId == destination.id && it.toDestinationId == nextDestination.id
-                    }
-
-                    stepsToNext.forEach { step ->
-                        rows.add(TimelineRowModel.TransportationItem(step))
-                        // Update the running time for the *next* destination's arrival.
-                        runningTime = runningTime.plusMinutes(step.durationInMinutes.toLong())
-                    }
-                }
-            }
-            rows
-        }
-    }
-
+    // tripIdが変更されたときに、Usecaseを実行してRouteオブジェクトを生成する
     LaunchedEffect(tripId) {
-        trip = tripUsecase.getById(tripId)
-    }
-
-    LaunchedEffect(trip?.destinations?.size) {
-        // Only run calculation if there are at least two destinations.
-        val destSize = trip?.destinations?.size ?: 0
-        if (destSize < 2) return@LaunchedEffect
-
-        // Use snapshotFlow to react to size changes, preventing re-calculation for the same size.
-        snapshotFlow { trip?.destinations?.size }
-            .distinctUntilChanged()
-            .onEach {
-                tripUsecase.calculateTravelTimes(tripId)
-                trip = tripUsecase.getById(tripId)
-            }
-            .launchIn(this)
+        isLoading = true
+        route = generateRouteUseCase.execute(tripId)
+        isLoading = false
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(trip?.title ?: "タイムライン") },
+                title = { Text("タイムライン") }, // TODO: routeからタイトルを取得する
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
@@ -148,51 +88,66 @@ fun TripTimelineScreen(
             }
         }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-        ) {
-            items(timelineRows) { row ->
-                when (row) {
-                    is TimelineRowModel.DestinationItem -> DestinationCard(row)
-                    is TimelineRowModel.TransportationItem -> TransportationInfo(row.transportation)
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (route != null) {
+            val currentRoute = route!!
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp),
+            ) {
+                items(currentRoute.stops.size) { index ->
+                    val stop = currentRoute.stops[index]
+                    DestinationCard(stop)
+
+                    // 次の目的地への移動区間があれば表示
+                    currentRoute.legs.getOrNull(index)?.let {
+                        LegInfo(it)
+                    }
                 }
+            }
+        } else {
+            // TODO: ルートが見つからなかった場合のUIを実装
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("目的地が設定されていません。")
             }
         }
     }
 }
 
 @Composable
-fun DestinationCard(item: TimelineRowModel.DestinationItem) {
-    val cardColors = when (item.type) {
-        DestinationType.START, DestinationType.END -> CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-        DestinationType.MIDDLE -> CardDefaults.cardColors()
-    }
+fun DestinationCard(stop: ScheduledStop) {
     val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
 
     Row(modifier = Modifier.height(IntrinsicSize.Min)) {
         Column(
             modifier = Modifier
-                .fillMaxHeight()
                 .width(50.dp)
                 .padding(end = 8.dp),
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.Center
+            horizontalAlignment = Alignment.End
         ) {
-            Text(item.time.format(timeFormatter), style = MaterialTheme.typography.bodyLarge)
+            Text(stop.arrivalTime.format(timeFormatter), style = MaterialTheme.typography.bodySmall)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(stop.departureTime.format(timeFormatter), style = MaterialTheme.typography.bodySmall)
         }
-        Card(modifier = Modifier.fillMaxWidth(), colors = cardColors) {
+        Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
-                val label = when (item.type) {
-                    DestinationType.START -> "出発"
-                    DestinationType.END -> "到着"
-                    DestinationType.MIDDLE -> null
-                }
-                label?.let { Text(it, style = MaterialTheme.typography.labelSmall) }
-                Text(item.destination.name, style = MaterialTheme.typography.titleLarge)
+                Text(stop.destination.name, style = MaterialTheme.typography.titleLarge)
+                Text("滞在時間: ${stop.stayDuration.toMinutes()}分", style = MaterialTheme.typography.bodyMedium)
             }
+        }
+    }
+}
+
+@Composable
+fun LegInfo(leg: RouteLeg) {
+    Column {
+        leg.steps.forEach {
+            TransportationInfo(it)
         }
     }
 }

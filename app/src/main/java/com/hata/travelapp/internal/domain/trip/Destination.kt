@@ -10,6 +10,7 @@ data class Destination(
     val name: String,
     val latitude: Double,
     val longitude: Double,
+    val stayDurationInMinutes: Int = 60, // 滞在時間（分）
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime
 )
