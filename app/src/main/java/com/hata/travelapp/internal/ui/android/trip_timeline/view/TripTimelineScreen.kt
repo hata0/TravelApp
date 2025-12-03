@@ -41,7 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hata.travelapp.internal.domain.route.Route
 import com.hata.travelapp.internal.domain.route.RouteLeg
@@ -53,6 +53,7 @@ import com.hata.travelapp.internal.domain.trip.TransportationId
 import com.hata.travelapp.internal.domain.trip.TransportationType
 import com.hata.travelapp.internal.domain.trip.TripId
 import java.time.Duration
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -60,15 +61,16 @@ import java.time.format.DateTimeFormatter
 fun TripTimelineScreen(
     viewModel: TripTimelineViewModel = hiltViewModel(),
     tripId: TripId,
+    date: LocalDate, // 表示する日付を受け取る
     onNavigateToMap: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val route by viewModel.route.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
 
-    // tripIdが変更されたときに、ViewModelにデータの読み込みを指示する
-    LaunchedEffect(tripId) {
-        viewModel.loadRoute(tripId)
+    // tripIdかdateが変更されたときに、ViewModelにデータの読み込みを指示する
+    LaunchedEffect(tripId, date) {
+        viewModel.loadRoute(tripId, date)
     }
 
     TripTimelineContent(

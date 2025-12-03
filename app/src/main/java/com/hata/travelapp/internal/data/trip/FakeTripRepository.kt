@@ -1,5 +1,6 @@
 package com.hata.travelapp.internal.data.trip
 
+import com.hata.travelapp.internal.domain.trip.DailyPlan
 import com.hata.travelapp.internal.domain.trip.Destination
 import com.hata.travelapp.internal.domain.trip.DestinationId
 import com.hata.travelapp.internal.domain.trip.Trip
@@ -15,44 +16,55 @@ class FakeTripRepository : TripRepository {
     // アプリ起動時に表示されるダミーデータ
     init {
         val tripId = TripId(UUID.randomUUID().toString())
+        val tripStartDate = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0)
+
         trips.add(
             Trip(
                 id = tripId,
                 title = "北海道旅行",
-                startedAt = LocalDateTime.now(),
-                endedAt = LocalDateTime.now().plusDays(3),
+                startedAt = tripStartDate,
+                endedAt = tripStartDate.plusDays(3),
                 createdAt = LocalDateTime.now(),
                 updatedAt = LocalDateTime.now(),
-                destinations = listOf(
-                    Destination(
-                        id = DestinationId("1"),
-                        name = "札幌",
-                        latitude = 43.06,
-                        longitude = 135.35,
-                        stayDurationInMinutes = 60,
-                        createdAt = LocalDateTime.now(),
-                        updatedAt = LocalDateTime.now()
+                dailyPlans = listOf(
+                    DailyPlan(
+                        dailyStartTime = tripStartDate.withHour(9),
+                        destinations = listOf(
+                            Destination(
+                                id = DestinationId("1"),
+                                name = "札幌",
+                                latitude = 43.06,
+                                longitude = 135.35,
+                                stayDurationInMinutes = 60,
+                                createdAt = LocalDateTime.now(),
+                                updatedAt = LocalDateTime.now()
+                            ),
+                            Destination(
+                                id = DestinationId("2"),
+                                name = "小樽",
+                                latitude = 43.19,
+                                longitude = 140.99,
+                                stayDurationInMinutes = 120,
+                                createdAt = LocalDateTime.now(),
+                                updatedAt = LocalDateTime.now()
+                            )
+                        )
                     ),
-                    Destination(
-                        id = DestinationId("2"),
-                        name = "小樽",
-                        latitude = 43.19,
-                        longitude = 140.99,
-                        stayDurationInMinutes = 120,
-                        createdAt = LocalDateTime.now(),
-                        updatedAt = LocalDateTime.now()
-                    ),
-                    Destination(
-                        id = DestinationId("3"),
-                        name = "函館",
-                        latitude = 41.76,
-                        longitude = 140.72,
-                        stayDurationInMinutes = 90,
-                        createdAt = LocalDateTime.now(),
-                        updatedAt = LocalDateTime.now()
+                    DailyPlan(
+                        dailyStartTime = tripStartDate.plusDays(1).withHour(10),
+                        destinations = listOf(
+                            Destination(
+                                id = DestinationId("3"),
+                                name = "函館",
+                                latitude = 41.76,
+                                longitude = 140.72,
+                                stayDurationInMinutes = 90,
+                                createdAt = LocalDateTime.now(),
+                                updatedAt = LocalDateTime.now()
+                            )
+                        )
                     )
-                ),
-                transportations = emptyList()
+                )
             )
         )
     }

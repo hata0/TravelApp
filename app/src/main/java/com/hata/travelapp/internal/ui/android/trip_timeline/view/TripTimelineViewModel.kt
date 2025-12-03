@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
 
 /**
@@ -30,13 +31,13 @@ class TripTimelineViewModel @Inject constructor(
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     /**
-     * 指定されたTripIdに基づいてルート情報を読み込み、UIの状態を更新する。
+     * 指定されたTripIdと日付に基づいてルート情報を読み込み、UIの状態を更新する。
      */
-    fun loadRoute(tripId: TripId) {
+    fun loadRoute(tripId: TripId, date: LocalDate) {
         viewModelScope.launch {
             _isLoading.value = true
-            // Usecaseを実行して、計算済みのRouteオブジェクトを取得する
-            _route.value = generateRouteUseCase.execute(tripId)
+            // Usecaseを新しいシグネチャで実行する
+            _route.value = generateRouteUseCase.execute(tripId, date)
             _isLoading.value = false
         }
     }

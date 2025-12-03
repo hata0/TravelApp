@@ -32,8 +32,7 @@ class TripInteractor(
             endedAt = endedAt,
             createdAt = now,
             updatedAt = now,
-            destinations = emptyList(),
-            transportations = emptyList()
+            dailyPlans = emptyList() // 新しいデータ構造に対応
         )
         tripRepository.create(trip)
         return trip.id

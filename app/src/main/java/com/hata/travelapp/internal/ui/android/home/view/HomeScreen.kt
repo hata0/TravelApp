@@ -163,8 +163,8 @@ private fun ProjectCard(
 @Composable
 fun HomeScreenPreview() {
     val dummyTrips = listOf(
-        Trip(id = TripId("1"), title = "北海道旅行", startedAt = LocalDateTime.now(), endedAt = LocalDateTime.now(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), destinations = emptyList(), transportations = emptyList()),
-        Trip(id = TripId("2"), title = "沖縄旅行", startedAt = LocalDateTime.now(), endedAt = LocalDateTime.now(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), destinations = emptyList(), transportations = emptyList())
+        Trip(id = TripId("1"), title = "北海道旅行", startedAt = LocalDateTime.now(), endedAt = LocalDateTime.now(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), dailyPlans = emptyList()),
+        Trip(id = TripId("2"), title = "沖縄旅行", startedAt = LocalDateTime.now(), endedAt = LocalDateTime.now(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), dailyPlans = emptyList())
     )
     HomeScreenContent(
         projects = dummyTrips,

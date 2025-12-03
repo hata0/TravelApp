@@ -2,6 +2,9 @@ package com.hata.travelapp.internal.domain.trip
 
 import java.time.LocalDateTime
 
+@JvmInline
+value class TripId(val value: String)
+
 data class Trip(
     val id: TripId,
     val title: String,
@@ -9,10 +12,5 @@ data class Trip(
     val endedAt: LocalDateTime,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
-    val destinations: List<Destination>,
-    val transportations: List<Transportation>
-){
-    fun update(title: String, startedAt: LocalDateTime, endedAt: LocalDateTime, updatedAt: LocalDateTime, destinations: List<Destination>, transportations: List<Transportation>): Trip {
-        return this.copy(title = title, startedAt = startedAt, endedAt = endedAt, updatedAt = updatedAt, destinations = destinations, transportations = transportations)
-    }
-}
+    val dailyPlans: List<DailyPlan>
+)
