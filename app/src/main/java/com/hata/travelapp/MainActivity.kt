@@ -25,6 +25,8 @@ import com.hata.travelapp.internal.api.google.directions.DirectionsApiService
 import com.hata.travelapp.internal.data.google.directions.GoogleDirectionsRepositoryImpl
 import com.hata.travelapp.internal.data.trip.FakeTripRepository
 import com.hata.travelapp.internal.domain.directions.DirectionsRepository
+import com.hata.travelapp.internal.domain.route.RouteGenerator
+import com.hata.travelapp.internal.domain.route.RouteGeneratorImpl
 import com.hata.travelapp.internal.domain.trip.Trip
 import com.hata.travelapp.internal.domain.trip.TripId
 import com.hata.travelapp.internal.domain.trip.TripRepository
@@ -70,16 +72,19 @@ class MainActivity : ComponentActivity() {
                     apiKey = "" // TODO: APIキーをBuildConfigから取得する
                 )
 
-                // Usecaseをインスタンス化
+                // Domain Serviceをインスタンス化
+                val routeGenerator: RouteGenerator = RouteGeneratorImpl(directionsRepository)
+
+                // Usecaseに、利用するRepositoryとDomain Serviceを注入
                 val tripUsecase: TripUsecase = TripInteractor(tripRepository, directionsRepository)
-                val generateRouteUseCase: GenerateRouteUseCase = GenerateRouteUseCaseImpl(tripRepository, directionsRepository)
+                val generateRouteUseCase: GenerateRouteUseCase = GenerateRouteUseCaseImpl(tripRepository, routeGenerator)
 
                 Scaffold( modifier = Modifier.fillMaxSize() ) { innerPadding ->
                     ApplicationNavigationHost(
                         navController = navController,
                         modifier = Modifier.padding(innerPadding),
                         tripUsecase = tripUsecase,
-                        generateRouteUseCase = generateRouteUseCase // 新しいUsecaseを渡す
+                        generateRouteUseCase = generateRouteUseCase
                     )
                 }
             }
@@ -95,7 +100,7 @@ fun ApplicationNavigationHost(
     navController: NavHostController,
     modifier: Modifier,
     tripUsecase: TripUsecase,
-    generateRouteUseCase: GenerateRouteUseCase // 新しいUsecaseを受け取る
+    generateRouteUseCase: GenerateRouteUseCase
 ) {
     val scope = rememberCoroutineScope()
     NavHost(navController = navController, startDestination = "home",
@@ -136,7 +141,7 @@ fun ApplicationNavigationHost(
             id?.let {
                 TripTimelineScreen(
                     tripId = TripId(it),
-                    generateRouteUseCase = generateRouteUseCase, // 新しいUsecaseを渡す
+                    generateRouteUseCase = generateRouteUseCase,
                     onNavigateBack = { navController.popBackStack() },
                     onNavigateToMap = { /* TODO */ }
                 )
