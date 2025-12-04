@@ -1,6 +1,5 @@
 package com.hata.travelapp.internal.ui.android.trip_timeline.view
 
-import app.cash.turbine.test
 import com.hata.travelapp.internal.domain.trip.entity.DailyPlan
 import com.hata.travelapp.internal.domain.trip.entity.Route
 import com.hata.travelapp.internal.domain.trip.entity.Trip
@@ -17,18 +16,15 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @ExperimentalCoroutinesApi
 class TripTimelineViewModelTest {

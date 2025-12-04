@@ -2,7 +2,6 @@ package com.hata.travelapp.internal.data.source.local.converter
 
 import androidx.room.TypeConverter
 import com.hata.travelapp.internal.data.source.local.entity.RouteStepInfo
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.LocalDateTime
 import java.time.ZoneOffset
