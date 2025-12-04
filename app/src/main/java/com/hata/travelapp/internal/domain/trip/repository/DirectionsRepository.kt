@@ -1,7 +1,7 @@
-package com.hata.travelapp.internal.domain.directions
+package com.hata.travelapp.internal.domain.trip.repository
 
-import com.hata.travelapp.internal.domain.route.RouteLeg
-import com.hata.travelapp.internal.domain.trip.Destination
+import com.hata.travelapp.internal.domain.trip.entity.Destination
+import com.hata.travelapp.internal.domain.trip.entity.RouteLeg
 
 /**
  * 2つの地点間のルート情報を、外部サービスに問い合わせる責務を持つRepositoryのインターフェース。

@@ -1,11 +1,11 @@
-package com.hata.travelapp.internal.data.trip
+package com.hata.travelapp.internal.data.repository
 
-import com.hata.travelapp.internal.domain.trip.DailyPlan
-import com.hata.travelapp.internal.domain.trip.Destination
-import com.hata.travelapp.internal.domain.trip.DestinationId
-import com.hata.travelapp.internal.domain.trip.Trip
-import com.hata.travelapp.internal.domain.trip.TripId
-import com.hata.travelapp.internal.domain.trip.TripRepository
+import com.hata.travelapp.internal.domain.trip.entity.DailyPlan
+import com.hata.travelapp.internal.domain.trip.entity.Destination
+import com.hata.travelapp.internal.domain.trip.entity.DestinationId
+import com.hata.travelapp.internal.domain.trip.entity.Trip
+import com.hata.travelapp.internal.domain.trip.entity.TripId
+import com.hata.travelapp.internal.domain.trip.repository.TripRepository
 import java.time.LocalDateTime
 import java.util.UUID
 

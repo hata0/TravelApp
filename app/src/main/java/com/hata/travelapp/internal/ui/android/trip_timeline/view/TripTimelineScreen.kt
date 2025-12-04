@@ -1,6 +1,5 @@
 package com.hata.travelapp.internal.ui.android.trip_timeline.view
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -38,20 +37,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.hata.travelapp.internal.domain.route.Route
-import com.hata.travelapp.internal.domain.route.RouteLeg
-import com.hata.travelapp.internal.domain.route.ScheduledStop
-import com.hata.travelapp.internal.domain.trip.Destination
-import com.hata.travelapp.internal.domain.trip.DestinationId
-import com.hata.travelapp.internal.domain.trip.Transportation
-import com.hata.travelapp.internal.domain.trip.TransportationId
-import com.hata.travelapp.internal.domain.trip.TransportationType
-import com.hata.travelapp.internal.domain.trip.TripId
+import com.hata.travelapp.internal.domain.trip.entity.Route
+import com.hata.travelapp.internal.domain.trip.entity.RouteLeg
+import com.hata.travelapp.internal.domain.trip.entity.ScheduledStop
+import com.hata.travelapp.internal.domain.trip.entity.Destination
+import com.hata.travelapp.internal.domain.trip.entity.DestinationId
+import com.hata.travelapp.internal.domain.trip.entity.Transportation
+import com.hata.travelapp.internal.domain.trip.entity.TransportationId
+import com.hata.travelapp.internal.domain.trip.entity.TransportationType
+import com.hata.travelapp.internal.domain.trip.entity.TripId
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime

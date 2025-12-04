@@ -1,16 +1,16 @@
 package com.hata.travelapp.internal.di
 
 import com.hata.travelapp.internal.api.google.directions.DirectionsApiService
-import com.hata.travelapp.internal.data.google.directions.GoogleDirectionsRepositoryImpl
-import com.hata.travelapp.internal.data.trip.FakeTripRepository
-import com.hata.travelapp.internal.domain.directions.DirectionsRepository
-import com.hata.travelapp.internal.domain.route.RouteGenerator
-import com.hata.travelapp.internal.domain.route.RouteGeneratorImpl
-import com.hata.travelapp.internal.domain.trip.TripRepository
+import com.hata.travelapp.internal.data.repository.GoogleDirectionsRepositoryImpl
+import com.hata.travelapp.internal.data.repository.FakeTripRepository
+import com.hata.travelapp.internal.domain.trip.repository.DirectionsRepository
+import com.hata.travelapp.internal.domain.trip.service.RouteGenerator
+import com.hata.travelapp.internal.domain.trip.service.RouteGeneratorImpl
+import com.hata.travelapp.internal.domain.trip.repository.TripRepository
 import com.hata.travelapp.internal.usecase.route.GenerateRouteUseCase
 import com.hata.travelapp.internal.usecase.route.GenerateRouteUseCaseImpl
-import com.hata.travelapp.internal.usecase.trip.TripInteractor
 import com.hata.travelapp.internal.usecase.trip.TripUsecase
+import com.hata.travelapp.internal.usecase.trip.TripUsecaseImpl
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -82,9 +82,8 @@ object AppModule {
     @Provides
     @Singleton
     fun provideTripUsecase(
-        tripRepository: TripRepository,
-        directionsRepository: DirectionsRepository
-    ): TripUsecase = TripInteractor(tripRepository, directionsRepository)
+        tripRepository: TripRepository
+    ): TripUsecase = TripUsecaseImpl(tripRepository)
 
     @Provides
     @Singleton

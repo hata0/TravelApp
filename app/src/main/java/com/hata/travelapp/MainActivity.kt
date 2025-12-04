@@ -15,7 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.hata.travelapp.internal.domain.trip.TripId
+import com.hata.travelapp.internal.domain.trip.entity.TripId
 import com.hata.travelapp.internal.ui.android.home.view.HomeScreen
 import com.hata.travelapp.internal.ui.android.trip.view.DateSelectionScreen
 import com.hata.travelapp.internal.ui.android.trip_timeline.view.TripTimelineScreen

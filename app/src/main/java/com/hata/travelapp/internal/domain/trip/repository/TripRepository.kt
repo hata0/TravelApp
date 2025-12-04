@@ -1,4 +1,7 @@
-package com.hata.travelapp.internal.domain.trip
+package com.hata.travelapp.internal.domain.trip.repository
+
+import com.hata.travelapp.internal.domain.trip.entity.Trip
+import com.hata.travelapp.internal.domain.trip.entity.TripId
 
 interface TripRepository {
     suspend fun getById(id: TripId): Trip?

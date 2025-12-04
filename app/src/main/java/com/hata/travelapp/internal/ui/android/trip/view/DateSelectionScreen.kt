@@ -25,8 +25,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.hata.travelapp.internal.domain.trip.DailyPlan
-import com.hata.travelapp.internal.domain.trip.TripId
+import com.hata.travelapp.internal.domain.trip.entity.DailyPlan
+import com.hata.travelapp.internal.domain.trip.entity.TripId
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter

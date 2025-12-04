@@ -1,18 +1,14 @@
-package com.hata.travelapp.internal.data.google.directions
+package com.hata.travelapp.internal.data.repository
 
 import com.hata.travelapp.internal.api.google.directions.DirectionsApiService
 import com.hata.travelapp.internal.api.google.directions.Step
-import com.hata.travelapp.internal.domain.directions.DirectionsRepository
-import com.hata.travelapp.internal.domain.route.RouteLeg
-import com.hata.travelapp.internal.domain.trip.Destination
-import com.hata.travelapp.internal.domain.trip.Transportation
-import com.hata.travelapp.internal.domain.trip.TransportationId
-import com.hata.travelapp.internal.domain.trip.TransportationType
-import com.hata.travelapp.internal.domain.trip.TripId
+import com.hata.travelapp.internal.domain.trip.entity.Destination
+import com.hata.travelapp.internal.domain.trip.entity.LatLng
+import com.hata.travelapp.internal.domain.trip.entity.RouteLeg
+import com.hata.travelapp.internal.domain.trip.entity.RouteStep
+import com.hata.travelapp.internal.domain.trip.entity.RouteStepTravelMode
+import com.hata.travelapp.internal.domain.trip.repository.DirectionsRepository
 import java.time.Duration
-import java.time.LocalDateTime
-import java.util.UUID
-import kotlin.math.roundToInt
 
 /**
  * Google Directions APIを使用してルート情報を取得する、`DirectionsRepository`の実装クラス。
@@ -48,7 +44,7 @@ class GoogleDirectionsRepositoryImpl(
                 to = to,
                 duration = Duration.ofSeconds(leg.duration.value.toLong()),
                 polyline = route.overviewPolyline.points,
-                steps = leg.steps.map { mapStepToTransportation(it, from, to) }
+                steps = leg.steps.map { mapToRouteStep(it) } // 新しいマッパーを使用
             )
         } catch (e: Exception) {
             // TODO: より詳細なエラーハンドリングを実装する
@@ -58,28 +54,22 @@ class GoogleDirectionsRepositoryImpl(
     }
 
     /**
-     * APIレスポンスの`Step`を、アプリのドメインモデル`Transportation`に変換する。
+     * APIレスポンスの`Step`を、アプリのドメインモデル`RouteStep`に変換する。
      */
-    private fun mapStepToTransportation(step: Step, from: Destination, to: Destination): Transportation {
-        val type = when (step.travelMode) {
-            "WALKING" -> TransportationType.WALK
-            "TRANSIT" -> TransportationType.TRAIN // より詳細な判別が必要な場合がある
-            "DRIVING" -> TransportationType.CAR
-            "BICYCLING" -> TransportationType.OTHER // TODO: 必要なら追加
-            else -> TransportationType.OTHER
+    private fun mapToRouteStep(step: Step): RouteStep {
+        val travelMode = when (step.travelMode) {
+            "WALKING" -> RouteStepTravelMode.WALKING
+            else -> RouteStepTravelMode.UNKNOWN
         }
 
-        val durationInMinutes = (step.duration.value / 60.0).roundToInt()
-
-        return Transportation(
-            id = TransportationId(UUID.randomUUID().toString()),
-            tripId = TripId(""), // この層ではTripIdを知らない
-            fromDestinationId = from.id,
-            toDestinationId = to.id,
-            type = type,
-            durationInMinutes = durationInMinutes,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
+        return RouteStep(
+            duration = Duration.ofSeconds(step.duration.value.toLong()),
+            distanceText = step.distance.text,
+            startLocation = LatLng(step.startLocation.lat, step.startLocation.lng),
+            endLocation = LatLng(step.endLocation.lat, step.endLocation.lng),
+            polyline = step.polyline.points,
+            travelMode = travelMode,
+            instruction = step.htmlInstructions ?: ""
         )
     }
 }

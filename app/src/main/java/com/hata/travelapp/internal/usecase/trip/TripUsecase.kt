@@ -1,23 +1,37 @@
 package com.hata.travelapp.internal.usecase.trip
 
-import com.hata.travelapp.internal.domain.trip.Trip
-import com.hata.travelapp.internal.domain.trip.TripId
-import com.hata.travelapp.internal.domain.trip.TripRepository
+import com.hata.travelapp.internal.domain.trip.entity.Trip
+import com.hata.travelapp.internal.domain.trip.entity.TripId
+import com.hata.travelapp.internal.domain.trip.repository.TripRepository
 import java.time.LocalDateTime
 import java.util.UUID
 
-class TripUsecase(
+/**
+ * 旅行情報の基本的なCRUD操作に関するビジネスロジックを定義するインターフェース。
+ */
+interface TripUsecase {
+    suspend fun getTripList(): List<Trip>
+    suspend fun getById(tripId: TripId): Trip?
+    suspend fun create(title: String, startedAt: LocalDateTime, endedAt: LocalDateTime): TripId
+    suspend fun update(id: String, title: String, startedAt: LocalDateTime, endedAt: LocalDateTime)
+    suspend fun delete(id: String)
+}
+
+/**
+ * `TripUsecase`の実装クラス。
+ */
+class TripUsecaseImpl(
     private val tripRepository: TripRepository,
-) {
-    suspend fun getTripList(): List<Trip> {
+) : TripUsecase {
+    override suspend fun getTripList(): List<Trip> {
         return tripRepository.getTripsList()
     }
 
-    suspend fun getById(tripId: TripId): Trip? {
+    override suspend fun getById(tripId: TripId): Trip? {
         return tripRepository.getById(tripId)
     }
 
-    suspend fun create(
+    override suspend fun create(
         title: String,
         startedAt: LocalDateTime,
         endedAt: LocalDateTime
@@ -36,7 +50,7 @@ class TripUsecase(
         return trip.id
     }
 
-    suspend fun update(
+    override suspend fun update(
         id: String,
         title: String,
         startedAt: LocalDateTime,
@@ -45,7 +59,7 @@ class TripUsecase(
         // 実装は仮
     }
 
-    suspend fun delete(id: String) {
+    override suspend fun delete(id: String) {
         // 実装は仮
     }
 }

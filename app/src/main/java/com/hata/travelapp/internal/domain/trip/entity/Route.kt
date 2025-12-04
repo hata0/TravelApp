@@ -1,7 +1,5 @@
-package com.hata.travelapp.internal.domain.route
+package com.hata.travelapp.internal.domain.trip.entity
 
-import com.hata.travelapp.internal.domain.trip.Destination
-import com.hata.travelapp.internal.domain.trip.Transportation
 import java.time.Duration
 import java.time.LocalDateTime
 
@@ -36,5 +34,36 @@ data class RouteLeg(
     val to: Destination,
     val duration: Duration,
     val polyline: String, // 地図に描画するためのエンコード済みポリライン文字列
-    val steps: List<Transportation> // その区間を構成する詳細な移動ステップ
+    val steps: List<RouteStep> // ドメインモデルのRouteStepに変更
+)
+
+/**
+ * ルートの単一の移動ステップ（例：「○○を右に曲がる」）。
+ * Directions APIの`Step`オブジェクトに対応する、純粋なドメインモデル。
+ */
+data class RouteStep(
+    val duration: Duration,
+    val distanceText: String,
+    val startLocation: LatLng,
+    val endLocation: LatLng,
+    val polyline: String,
+    val travelMode: RouteStepTravelMode,
+    val instruction: String
+)
+
+/**
+ * 移動手段を表すドメインのenum。
+ * 当面は徒歩のみを考慮する。
+ */
+enum class RouteStepTravelMode {
+    WALKING,
+    UNKNOWN
+}
+
+/**
+ * 緯度経度を表す、ドメイン層のシンプルなデータクラス。
+ */
+data class LatLng(
+    val lat: Double,
+    val lng: Double
 )

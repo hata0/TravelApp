@@ -1,4 +1,4 @@
-package com.hata.travelapp.internal.domain.trip
+package com.hata.travelapp.internal.domain.trip.entity
 
 import java.time.LocalDateTime
 

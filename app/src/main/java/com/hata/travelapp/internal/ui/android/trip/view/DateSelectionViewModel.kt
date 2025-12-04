@@ -2,8 +2,8 @@ package com.hata.travelapp.internal.ui.android.trip.view
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.hata.travelapp.internal.domain.trip.DailyPlan
-import com.hata.travelapp.internal.domain.trip.TripId
+import com.hata.travelapp.internal.domain.trip.entity.DailyPlan
+import com.hata.travelapp.internal.domain.trip.entity.TripId
 import com.hata.travelapp.internal.usecase.trip.TripUsecase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

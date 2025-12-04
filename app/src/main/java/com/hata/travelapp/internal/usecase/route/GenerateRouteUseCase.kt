@@ -1,20 +1,27 @@
 package com.hata.travelapp.internal.usecase.route
 
-import com.hata.travelapp.internal.domain.route.Route
-import com.hata.travelapp.internal.domain.route.RouteGenerator
-import com.hata.travelapp.internal.domain.trip.TripId
-import com.hata.travelapp.internal.domain.trip.TripRepository
+import com.hata.travelapp.internal.domain.trip.entity.Route
+import com.hata.travelapp.internal.domain.trip.entity.TripId
+import com.hata.travelapp.internal.domain.trip.service.RouteGenerator
+import com.hata.travelapp.internal.domain.trip.repository.TripRepository
 import java.time.LocalDate
 
 /**
- * 特定の日付のルートを生成する責務を持つUsecase。
+ * 特定の日付のルートを生成する責務を持つUsecaseのインターフェース。
+ */
+interface GenerateRouteUseCase {
+    suspend fun execute(tripId: TripId, date: LocalDate): Route?
+}
+
+/**
+ * `GenerateRouteUseCase`の実装クラス。
  * 実際の計算ロジックはドメイン層の`RouteGenerator`に委譲し、自身は調整役の責務に徹する。
  */
-class GenerateRouteUseCase(
+class GenerateRouteUseCaseImpl(
     private val tripRepository: TripRepository,
     private val routeGenerator: RouteGenerator
-) {
-    suspend fun execute(tripId: TripId, date: LocalDate): Route? {
+) : GenerateRouteUseCase {
+    override suspend fun execute(tripId: TripId, date: LocalDate): Route? {
         // 1. Repositoryから旅行データを取得する
         val trip = tripRepository.getById(tripId) ?: return null
 

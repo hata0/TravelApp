@@ -1,7 +1,10 @@
-package com.hata.travelapp.internal.domain.route
+package com.hata.travelapp.internal.domain.trip.service
 
-import com.hata.travelapp.internal.domain.directions.DirectionsRepository
-import com.hata.travelapp.internal.domain.trip.Destination
+import com.hata.travelapp.internal.domain.trip.entity.Destination
+import com.hata.travelapp.internal.domain.trip.entity.Route
+import com.hata.travelapp.internal.domain.trip.entity.RouteLeg
+import com.hata.travelapp.internal.domain.trip.entity.ScheduledStop
+import com.hata.travelapp.internal.domain.trip.repository.DirectionsRepository
 import java.time.Duration
 import java.time.LocalDateTime
 
@@ -9,10 +12,17 @@ import java.time.LocalDateTime
  * 目的地のリストと開始時刻から、単一の連続したルートを計算する責務を持つ、ドメインサービス。
  * `Trip`や「何日目か」といった概念を一切知らず、純粋な計算ロジックに集中する。
  */
-class RouteGenerator(
-    private val directionsRepository: DirectionsRepository
-) {
+interface RouteGenerator {
     suspend fun generate(
+        destinations: List<Destination>,
+        startTime: LocalDateTime
+    ): Route
+}
+
+class RouteGeneratorImpl(
+    private val directionsRepository: DirectionsRepository
+) : RouteGenerator {
+    override suspend fun generate(
         destinations: List<Destination>,
         startTime: LocalDateTime
     ): Route {
