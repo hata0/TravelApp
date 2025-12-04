@@ -4,9 +4,10 @@ import android.content.Context
 import androidx.room.Room
 import com.hata.travelapp.internal.data.source.local.AppDatabase
 import com.hata.travelapp.internal.data.source.local.dao.RouteLegDao
+import com.hata.travelapp.internal.data.source.local.dao.TripDao
 import com.hata.travelapp.internal.data.source.remote.RoutesApiService
 import com.hata.travelapp.internal.data.repository.GoogleDirectionsRepositoryImpl
-import com.hata.travelapp.internal.data.repository.FakeTripRepository
+import com.hata.travelapp.internal.data.repository.RoomTripRepository
 import com.hata.travelapp.internal.domain.trip.repository.DirectionsRepository
 import com.hata.travelapp.internal.domain.trip.service.TimelineGenerator
 import com.hata.travelapp.internal.domain.trip.service.TimelineGeneratorImpl
@@ -70,7 +71,7 @@ object AppModule {
             context,
             AppDatabase::class.java,
             "travel-app-database"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
 
     @Provides
@@ -78,12 +79,18 @@ object AppModule {
     fun provideRouteLegDao(appDatabase: AppDatabase): RouteLegDao {
         return appDatabase.routeLegDao()
     }
+
+    @Provides
+    @Singleton
+    fun provideTripDao(appDatabase: AppDatabase): TripDao {
+        return appDatabase.tripDao()
+    }
     // endregion
 
     // region Repositories
     @Provides
     @Singleton
-    fun provideTripRepository(): TripRepository = FakeTripRepository()
+    fun provideTripRepository(tripDao: TripDao): TripRepository = RoomTripRepository(tripDao)
 
     @Provides
     @Singleton
