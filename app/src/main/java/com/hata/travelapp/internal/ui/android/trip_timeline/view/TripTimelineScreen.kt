@@ -1,5 +1,6 @@
 package com.hata.travelapp.internal.ui.android.trip_timeline.view
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -14,12 +15,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.DirectionsBus
-import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.DirectionsWalk
-import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Train
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,14 +38,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.hata.travelapp.internal.domain.trip.entity.Route
-import com.hata.travelapp.internal.domain.trip.entity.RouteLeg
-import com.hata.travelapp.internal.domain.trip.entity.ScheduledStop
 import com.hata.travelapp.internal.domain.trip.entity.Destination
 import com.hata.travelapp.internal.domain.trip.entity.DestinationId
-import com.hata.travelapp.internal.domain.trip.entity.Transportation
-import com.hata.travelapp.internal.domain.trip.entity.TransportationId
-import com.hata.travelapp.internal.domain.trip.entity.TransportationType
+import com.hata.travelapp.internal.domain.trip.entity.LatLng
+import com.hata.travelapp.internal.domain.trip.entity.Route
+import com.hata.travelapp.internal.domain.trip.entity.RouteLeg
+import com.hata.travelapp.internal.domain.trip.entity.RouteStep
+import com.hata.travelapp.internal.domain.trip.entity.RouteStepTravelMode
+import com.hata.travelapp.internal.domain.trip.entity.ScheduledStop
 import com.hata.travelapp.internal.domain.trip.entity.TripId
 import java.time.Duration
 import java.time.LocalDate
@@ -162,20 +159,16 @@ fun DestinationCard(stop: ScheduledStop) {
 fun LegInfo(leg: RouteLeg) {
     Column {
         leg.steps.forEach {
-            TransportationInfo(it)
+            StepInfo(it)
         }
     }
 }
 
 @Composable
-fun TransportationInfo(transportation: Transportation) {
-    val icon = when (transportation.type) {
-        TransportationType.WALK -> Icons.Default.DirectionsWalk
-        TransportationType.TRAIN -> Icons.Default.Train
-        TransportationType.BUS -> Icons.Default.DirectionsBus
-        TransportationType.CAR -> Icons.Default.DirectionsCar
-        TransportationType.PLANE -> Icons.Default.Flight
-        TransportationType.OTHER -> Icons.Default.Map // Placeholder
+fun StepInfo(step: RouteStep) {
+    val icon = when (step.travelMode) {
+        RouteStepTravelMode.WALKING -> Icons.Default.DirectionsWalk
+        RouteStepTravelMode.UNKNOWN -> Icons.Default.Map // Placeholder
     }
 
     Row(
@@ -189,9 +182,14 @@ fun TransportationInfo(transportation: Transportation) {
             VerticalDivider(modifier = Modifier.fillMaxHeight(), thickness = 2.dp, color = MaterialTheme.colorScheme.primary)
         }
         Spacer(modifier = Modifier.width(16.dp))
-        Icon(icon, contentDescription = transportation.type.name, tint = MaterialTheme.colorScheme.primary)
-        Spacer(modifier = Modifier.width(8.dp))
-        Text("${transportation.durationInMinutes} 分")
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(icon, contentDescription = step.travelMode.name, tint = MaterialTheme.colorScheme.primary)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("${step.duration.toMinutes()} 分 (${step.distanceText})", style = MaterialTheme.typography.bodyMedium)
+            }
+            Text(step.instruction, style = MaterialTheme.typography.bodySmall)
+        }
     }
 }
 
@@ -213,7 +211,24 @@ fun TripTimelineScreenPreview() {
                 duration = Duration.ofHours(3),
                 polyline = "",
                 steps = listOf(
-                    Transportation(TransportationId("s1"), TripId("t1"), dummyDestination1.id, dummyDestination2.id, TransportationType.TRAIN, 180, LocalDateTime.now(), LocalDateTime.now())
+                    RouteStep(
+                        duration = Duration.ofMinutes(15),
+                        distanceText = "1.2 km",
+                        startLocation = LatLng(35.68, 139.76),
+                        endLocation = LatLng(35.681, 139.761),
+                        polyline = "",
+                        travelMode = RouteStepTravelMode.WALKING,
+                        instruction = "○○駅まで歩く"
+                    ),
+                    RouteStep(
+                        duration = Duration.ofMinutes(150),
+                        distanceText = "550 km",
+                        startLocation = LatLng(35.681, 139.761),
+                        endLocation = LatLng(34.73, 135.50),
+                        polyline = "",
+                        travelMode = RouteStepTravelMode.UNKNOWN, // For Train
+                        instruction = "新幹線に乗る"
+                    )
                 )
             )
         )

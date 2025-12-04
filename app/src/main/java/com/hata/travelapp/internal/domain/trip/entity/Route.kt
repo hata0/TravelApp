@@ -34,18 +34,16 @@ data class RouteLeg(
     val to: Destination,
     val duration: Duration,
     val polyline: String, // 地図に描画するためのエンコード済みポリライン文字列
-    val steps: List<RouteStep> // ドメインモデルのRouteStepに変更
+    val steps: List<RouteStep>
 )
 
 /**
  * ルートの単一の移動ステップ（例：「○○を右に曲がる」）。
- * Directions APIの`Step`オブジェクトに対応する、純粋なドメインモデル。
+ * Google Routes APIの`RouteStep`に対応する、純粋なドメインモデル。
  */
 data class RouteStep(
     val duration: Duration,
-    val distanceText: String,
-    val startLocation: LatLng,
-    val endLocation: LatLng,
+    val distanceMeters: Int,
     val polyline: String,
     val travelMode: RouteStepTravelMode,
     val instruction: String
@@ -62,6 +60,7 @@ enum class RouteStepTravelMode {
 
 /**
  * 緯度経度を表す、ドメイン層のシンプルなデータクラス。
+ * （RouteStepからstart/endがなくなったため、現在未使用）
  */
 data class LatLng(
     val lat: Double,

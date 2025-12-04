@@ -1,6 +1,6 @@
 package com.hata.travelapp.internal.di
 
-import com.hata.travelapp.internal.api.google.directions.DirectionsApiService
+import com.hata.travelapp.internal.data.source.remote.DirectionsApiService
 import com.hata.travelapp.internal.data.repository.GoogleDirectionsRepositoryImpl
 import com.hata.travelapp.internal.data.repository.FakeTripRepository
 import com.hata.travelapp.internal.domain.trip.repository.DirectionsRepository
