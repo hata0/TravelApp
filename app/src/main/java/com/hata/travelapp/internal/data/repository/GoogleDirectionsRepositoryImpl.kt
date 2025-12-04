@@ -42,6 +42,7 @@ class GoogleDirectionsRepositoryImpl(
                 from = from,
                 to = to,
                 duration = parseDuration(leg.duration) ?: Duration.ZERO,
+                distanceMeters = leg.distanceMeters,
                 polyline = route.polyline?.encodedPolyline ?: "",
                 steps = leg.steps.map { mapToDomainRouteStep(it) }
             )

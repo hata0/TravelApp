@@ -57,6 +57,7 @@ data class RouteLeg(
     val from: RoutePoint,
     val to: RoutePoint,
     val duration: Duration,
+    val distanceMeters: Int, // 区間の総距離を追加
     val polyline: String, // 地図に描画するためのエンコード済みポリライン文字列
     val steps: List<RouteStep>
 )

@@ -111,11 +111,11 @@ fun DateSelectionScreenPreview() {
     val dummyPlans = listOf(
         DailyPlan(
             dailyStartTime = LocalDateTime.now(),
-            destinations = emptyList()
+            routePoints = emptyList()
         ),
         DailyPlan(
             dailyStartTime = LocalDateTime.now().plusDays(1),
-            destinations = emptyList()
+            routePoints = emptyList()
         )
     )
     DateSelectionScreenContent(

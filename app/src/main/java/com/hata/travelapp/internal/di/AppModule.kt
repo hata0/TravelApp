@@ -4,13 +4,19 @@ import com.hata.travelapp.internal.data.source.remote.DirectionsApiService
 import com.hata.travelapp.internal.data.repository.GoogleDirectionsRepositoryImpl
 import com.hata.travelapp.internal.data.repository.FakeTripRepository
 import com.hata.travelapp.internal.domain.trip.repository.DirectionsRepository
-import com.hata.travelapp.internal.domain.trip.service.RouteGenerator
-import com.hata.travelapp.internal.domain.trip.service.RouteGeneratorImpl
+import com.hata.travelapp.internal.domain.trip.service.TimelineGenerator
+import com.hata.travelapp.internal.domain.trip.service.TimelineGeneratorImpl
 import com.hata.travelapp.internal.domain.trip.repository.TripRepository
-import com.hata.travelapp.internal.usecase.route.GenerateRouteUseCase
-import com.hata.travelapp.internal.usecase.route.GenerateRouteUseCaseImpl
+import com.hata.travelapp.internal.usecase.route.GenerateTimelineUseCase
+import com.hata.travelapp.internal.usecase.route.GenerateTimelineUseCaseImpl
+import com.hata.travelapp.internal.usecase.route.RecalculateTimelineUseCase
+import com.hata.travelapp.internal.usecase.route.RecalculateTimelineUseCaseImpl
 import com.hata.travelapp.internal.usecase.trip.TripUsecase
 import com.hata.travelapp.internal.usecase.trip.TripUsecaseImpl
+import com.hata.travelapp.internal.usecase.trip.UpdateDailyStartTimeUseCase
+import com.hata.travelapp.internal.usecase.trip.UpdateDailyStartTimeUseCaseImpl
+import com.hata.travelapp.internal.usecase.trip.UpdateStayDurationUseCase
+import com.hata.travelapp.internal.usecase.trip.UpdateStayDurationUseCaseImpl
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -73,9 +79,7 @@ object AppModule {
     // region Domain Services
     @Provides
     @Singleton
-    fun provideRouteGenerator(
-        directionsRepository: DirectionsRepository
-    ): RouteGenerator = RouteGeneratorImpl(directionsRepository)
+    fun provideTimelineGenerator(): TimelineGenerator = TimelineGeneratorImpl()
     // endregion
 
     // region Use Cases
@@ -87,9 +91,32 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideGenerateRouteUseCase(
+    fun provideGenerateTimelineUseCase(
         tripRepository: TripRepository,
-        routeGenerator: RouteGenerator
-    ): GenerateRouteUseCase = GenerateRouteUseCaseImpl(tripRepository, routeGenerator)
+        directionsRepository: DirectionsRepository,
+        timelineGenerator: TimelineGenerator
+    ): GenerateTimelineUseCase = GenerateTimelineUseCaseImpl(
+        tripRepository = tripRepository,
+        directionsRepository = directionsRepository,
+        timelineGenerator = timelineGenerator
+    )
+
+    @Provides
+    @Singleton
+    fun provideRecalculateTimelineUseCase(
+        timelineGenerator: TimelineGenerator
+    ): RecalculateTimelineUseCase = RecalculateTimelineUseCaseImpl(timelineGenerator)
+
+    @Provides
+    @Singleton
+    fun provideUpdateDailyStartTimeUseCase(
+        tripRepository: TripRepository
+    ): UpdateDailyStartTimeUseCase = UpdateDailyStartTimeUseCaseImpl(tripRepository)
+
+    @Provides
+    @Singleton
+    fun provideUpdateStayDurationUseCase(
+        tripRepository: TripRepository
+    ): UpdateStayDurationUseCase = UpdateStayDurationUseCaseImpl(tripRepository)
     // endregion
 }

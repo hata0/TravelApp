@@ -29,7 +29,7 @@ class FakeTripRepository : TripRepository {
                 dailyPlans = listOf(
                     DailyPlan(
                         dailyStartTime = tripStartDate.withHour(9),
-                        destinations = listOf(
+                        routePoints = listOf(
                             RoutePoint(
                                 id = RoutePointId("1"),
                                 name = "札幌",
@@ -52,7 +52,7 @@ class FakeTripRepository : TripRepository {
                     ),
                     DailyPlan(
                         dailyStartTime = tripStartDate.plusDays(1).withHour(10),
-                        destinations = listOf(
+                        routePoints = listOf(
                             RoutePoint(
                                 id = RoutePointId("3"),
                                 name = "函館",
