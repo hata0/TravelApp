@@ -4,7 +4,7 @@ import com.hata.travelapp.internal.data.source.local.dao.RouteLegDao
 import com.hata.travelapp.internal.data.source.local.entity.RouteLegEntity
 import com.hata.travelapp.internal.data.source.local.entity.RouteStepInfo
 import com.hata.travelapp.internal.data.source.remote.ComputeRoutesRequest
-import com.hata.travelapp.internal.data.source.remote.DirectionsApiService
+import com.hata.travelapp.internal.data.source.remote.RoutesApiService
 import com.hata.travelapp.internal.data.source.remote.LatLngRequest
 import com.hata.travelapp.internal.data.source.remote.LocationWrapper
 import com.hata.travelapp.internal.data.source.remote.Waypoint
@@ -22,7 +22,7 @@ import com.hata.travelapp.internal.data.source.remote.RouteStep as ApiRouteStep
  * Google Routes APIとローカルDBキャッシュを使用してルート情報を取得する、`DirectionsRepository`の実装クラス。
  */
 class GoogleDirectionsRepositoryImpl(
-    private val apiService: DirectionsApiService,
+    private val apiService: RoutesApiService,
     private val routeLegDao: RouteLegDao,
     private val apiKey: String
 ) : DirectionsRepository {

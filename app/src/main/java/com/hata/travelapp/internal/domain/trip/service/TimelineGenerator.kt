@@ -29,6 +29,13 @@ class TimelineGeneratorImpl : TimelineGenerator {
             return Route(stops = emptyList(), legs = emptyList())
         }
 
+        // Handle single point case specifically
+        if (routePoints.size == 1) {
+            val point = routePoints.first()
+            val stop = TimelineItem.FinalDestination(point, startTime)
+            return Route(stops = listOf(stop), legs = emptyList())
+        }
+
         val stops = mutableListOf<TimelineItem>()
         var currentTime = startTime
 

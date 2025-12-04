@@ -1,42 +1,118 @@
 package com.hata.travelapp.internal.ui.android.trip_timeline.view
 
+import app.cash.turbine.test
+import com.hata.travelapp.internal.domain.trip.entity.DailyPlan
+import com.hata.travelapp.internal.domain.trip.entity.Route
+import com.hata.travelapp.internal.domain.trip.entity.Trip
+import com.hata.travelapp.internal.domain.trip.entity.TripId
+import com.hata.travelapp.internal.usecase.route.GenerateTimelineUseCase
+import com.hata.travelapp.internal.usecase.route.RecalculateTimelineUseCase
+import com.hata.travelapp.internal.usecase.trip.TripUsecase
+import com.hata.travelapp.internal.usecase.trip.UpdateDailyStartTimeUseCase
+import com.hata.travelapp.internal.usecase.trip.UpdateStayDurationUseCase
+import com.hata.travelapp.util.MainCoroutineRule
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import java.time.LocalDate
+import java.time.LocalDateTime
 
-/**
- * ViewModel Layerの`TripTimelineViewModel`のテスト。
- * このViewModelが、Usecaseの呼び出しに応じて、UIの状態(StateFlow)を
- * 正しく更新することを検証する。
- */
+@ExperimentalCoroutinesApi
 class TripTimelineViewModelTest {
 
-    // TODO: @get:Rule を使って、MainCoroutineRuleをセットアップする
+    @get:Rule
+    val mainCoroutineRule = MainCoroutineRule()
 
-    // SUT (System Under Test) と、その依存対象のモック
-    // TODO: lateinit var で、generateRouteUseCaseのモックと、viewModelを宣言する
+    private lateinit var viewModel: TripTimelineViewModel
 
-    // TODO: @Before を使って、各テストの前にSUTとモックを初期化するセットアップメソッドを定義する
+    private val generateTimelineUseCase: GenerateTimelineUseCase = mockk()
+    private val recalculateTimelineUseCase: RecalculateTimelineUseCase = mockk()
+    private val tripUsecase: TripUsecase = mockk()
+    private val updateDailyStartTimeUseCase: UpdateDailyStartTimeUseCase = mockk()
+    private val updateStayDurationUseCase: UpdateStayDurationUseCase = mockk()
 
-    @Test
-    fun `loadRoute - Usecaseが成功した場合、isLoadingはtrueからfalseに、routeは正しい値に更新される`() {
-        // Arrange (準備)
-        // TODO: generateRouteUseCaseモックが、テスト用のRouteオブジェクトを返すように設定する
-
-        // Act (実行) & Assert (表明)
-        // TODO: viewModel.route.test { ... } を使い、turbineでStateFlowの遷移を検証する
-        // TODO: 初期状態がnullであることを確認する (awaitItem)
-        // TODO: viewModel.loadRoute を呼び出す
-        // TODO: 次の状態が、usecaseが返したRouteオブジェクトと一致することを確認する (awaitItem)
-
-        // TODO: isLoadingのFlowも同様にテストする
+    @Before
+    fun setUp() {
+        viewModel = TripTimelineViewModel(
+            generateTimelineUseCase,
+            recalculateTimelineUseCase,
+            tripUsecase,
+            updateDailyStartTimeUseCase,
+            updateStayDurationUseCase
+        )
     }
 
     @Test
-    fun `loadRoute - Usecaseが失敗した場合、isLoadingはtrueからfalseに、routeはnullのまま`() {
-        // Arrange (準備)
-        // TODO: generateRouteUseCaseモックが、nullを返すように設定する
+    fun `loadTimeline - when usecase succeeds - updates route and isLoading state`() = runTest {
+        val tripId = TripId("trip1")
+        val date = LocalDate.now()
+        val mockRoute: Route = mockk(relaxed = true)
+        coEvery { generateTimelineUseCase.execute(tripId, date) } returns mockRoute
 
-        // Act (実行) & Assert (表明)
-        // TODO: viewModel.route.test { ... } を使ってStateFlowを検証する
-        // TODO: 戻り値がnullのままであることを確認する
+        viewModel.loadTimeline(tripId, date)
+
+        assertEquals(mockRoute, viewModel.route.value)
+        assertFalse(viewModel.isLoading.value)
+    }
+
+    @Test
+    fun `loadTimeline - when usecase fails - route remains null`() = runTest {
+        val tripId = TripId("trip1")
+        val date = LocalDate.now()
+        coEvery { generateTimelineUseCase.execute(tripId, date) } returns null
+
+        viewModel.loadTimeline(tripId, date)
+
+        assertNull(viewModel.route.value)
+        assertFalse(viewModel.isLoading.value)
+    }
+
+    @Test
+    fun `onDailyStartTimeChanged - calls update and recalculate usecases`() = runTest {
+        val tripId = TripId("trip1")
+        val date = LocalDate.now()
+        val newStartTime = date.atTime(10, 0)
+        val mockInitialRoute: Route = mockk(relaxed = true)
+        val mockRecalculatedRoute: Route = mockk()
+
+        // Arrange: Mock the trip and daily plan data
+        val dailyPlan = DailyPlan(date.atTime(9, 0), emptyList())
+        val mockTrip = mockk<Trip> {
+            every { dailyPlans } returns listOf(dailyPlan)
+        }
+
+        // First, load initial data to set the viewModel's internal state
+        coEvery { generateTimelineUseCase.execute(tripId, date) } returns mockInitialRoute
+        viewModel.loadTimeline(tripId, date)
+        advanceUntilIdle() // Ensure initial loading is complete
+
+        // Setup mocks for the update flow
+        coEvery { updateDailyStartTimeUseCase.execute(tripId, date, newStartTime) } returns Unit
+        coEvery { tripUsecase.getById(tripId) } returns mockTrip
+        every { recalculateTimelineUseCase.execute(any(), any(), any()) } returns mockRecalculatedRoute
+
+        // Act
+        viewModel.onDailyStartTimeChanged(newStartTime)
+        advanceUntilIdle() // Ensure the launched coroutine completes
+
+        // Assert
+        coVerify(exactly = 1) { updateDailyStartTimeUseCase.execute(tripId, date, newStartTime) }
+        coVerify(exactly = 1) { tripUsecase.getById(tripId) }
+        verify(exactly = 1) { recalculateTimelineUseCase.execute(any(), any(), any()) }
+
+        assertEquals(mockRecalculatedRoute, viewModel.route.value)
     }
 }

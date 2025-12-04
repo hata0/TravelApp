@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.hata.travelapp.internal.data.source.local.AppDatabase
 import com.hata.travelapp.internal.data.source.local.dao.RouteLegDao
-import com.hata.travelapp.internal.data.source.remote.DirectionsApiService
+import com.hata.travelapp.internal.data.source.remote.RoutesApiService
 import com.hata.travelapp.internal.data.repository.GoogleDirectionsRepositoryImpl
 import com.hata.travelapp.internal.data.repository.FakeTripRepository
 import com.hata.travelapp.internal.domain.trip.repository.DirectionsRepository
@@ -33,10 +33,6 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import javax.inject.Singleton
 
-/**
- * HiltのDIコンテナに、アプリケーション全体の依存性の解決方法を教えるモジュール。
- * SingletonComponentにインストールすることで、アプリケーションのライフサイクルで共有される。
- */
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
@@ -62,8 +58,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideDirectionsApiService(retrofit: Retrofit): DirectionsApiService =
-        retrofit.create(DirectionsApiService::class.java)
+    fun provideRoutesApiService(retrofit: Retrofit): RoutesApiService =
+        retrofit.create(RoutesApiService::class.java)
     // endregion
 
     // region Database
@@ -92,7 +88,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideDirectionsRepository(
-        apiService: DirectionsApiService,
+        apiService: RoutesApiService,
         routeLegDao: RouteLegDao
     ): DirectionsRepository = GoogleDirectionsRepositoryImpl(
         apiService = apiService,

@@ -1,50 +1,125 @@
 package com.hata.travelapp.internal.data.repository
 
+import com.hata.travelapp.internal.data.source.local.dao.RouteLegDao
+import com.hata.travelapp.internal.data.source.local.entity.RouteLegEntity
+import com.hata.travelapp.internal.data.source.remote.RoutesApiService
+import com.hata.travelapp.internal.domain.trip.entity.RoutePoint
+import com.hata.travelapp.internal.domain.trip.entity.RoutePointId
+import com.hata.travelapp.util.MainCoroutineRule
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.runs
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import retrofit2.Retrofit
+import java.time.Duration
+import java.time.LocalDateTime
 
-/**
- * Data Layerの`GoogleDirectionsRepositoryImpl`のテスト。
- * 偽物のAPIサーバー(MockWebServer)を使い、ネットワークレスポンスを
- * ドメインモデルへ正しくマッピングできるかを検証する。
- */
 class GoogleDirectionsRepositoryImplTest {
 
-    // TODO: @get:Rule を使って、MainCoroutineRuleをセットアップする
+    @get:Rule
+    val mainCoroutineRule = MainCoroutineRule()
 
-    // TODO: MockWebServerのインスタンスを宣言する
-    // private lateinit var server: MockWebServer
+    private lateinit var server: MockWebServer
+    private lateinit var repository: GoogleDirectionsRepositoryImpl
+    private lateinit var apiService: RoutesApiService
+    private val routeLegDao: RouteLegDao = mockk()
 
-    // TODO: SUT (System Under Test)を宣言する
-    // private lateinit var repository: GoogleDirectionsRepositoryImpl
+    private val dummyFrom = RoutePoint(RoutePointId("fromId"), "From", 0.0, 0.0, 0, LocalDateTime.now(), LocalDateTime.now())
+    private val dummyTo = RoutePoint(RoutePointId("toId"), "To", 1.0, 1.0, 0, LocalDateTime.now(), LocalDateTime.now())
 
-    // TODO: @Before を使って、各テストの前にサーバーを起動し、SUTを初期化するセットアップメソッドを定義する
-    // TODO: RetrofitのbaseUrlを、起動したMockWebServerのURLに向ける
+    @Before
+    fun setUp() {
+        server = MockWebServer()
+        server.start()
 
-    // TODO: @After を使って、各テストの後にサーバーをシャットダウンするメソッドを定義する
+        val json = Json { ignoreUnknownKeys = true }
 
-    @Test
-    fun `getDirections - APIが成功レスポンスを返した場合、RouteLegに正しくマッピングされる`() {
-        // Arrange (準備)
-        // TODO: 偽物のAPIサーバーに、成功時のJSONレスポンスをセットする (server.enqueue)
-        // TODO: JSONファイルは `app/src/test/resources` に置くのが一般的
+        apiService = Retrofit.Builder()
+            .baseUrl(server.url("/"))
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+            .build()
+            .create(RoutesApiService::class.java)
 
-        // Act (実行)
-        // TODO: repository.getDirections を呼び出す
+        repository = GoogleDirectionsRepositoryImpl(apiService, routeLegDao, "test_api_key")
+    }
 
-        // Assert (表明)
-        // TODO: 戻り値の`RouteLeg`がnullでないことを確認する
-        // TODO: duration, polyline, stepsの各プロパティが、JSONの内容と一致しているか検証する
+    @After
+    fun tearDown() {
+        server.shutdown()
     }
 
     @Test
-    fun `getDirections - APIがエラーレスポンスを返した場合、nullが返される`() {
-        // Arrange (準備)
-        // TODO: 偽物のAPIサーバーに、エラーステータスコード(404, 500など)をセットする
+    fun `getDirections - when cache hit - returns from cache and not call api`() = runTest {
+        // Arrange: Setup DAO to return a cached entity
+        val cachedEntity = RouteLegEntity(
+            fromRoutePointId = "fromId",
+            toRoutePointId = "toId",
+            durationSeconds = 100L,
+            distanceMeters = 200,
+            polyline = "cached_polyline",
+            stepsJson = "[]"
+        )
+        coEvery { routeLegDao.getRouteLeg(eq("fromId"), eq("toId")) } returns cachedEntity
 
-        // Act (実行)
-        // TODO: repository.getDirections を呼び出す
+        // Act
+        val result = repository.getDirections(dummyFrom, dummyTo)
 
-        // Assert (表明)
-        // TODO: 戻り値がnullであることを確認する
+        // Assert
+        assertNotNull(result)
+        assertEquals(100L, result?.duration?.seconds)
+        assertEquals(200, result?.distanceMeters)
+        assertEquals("cached_polyline", result?.polyline)
+        assertEquals(0, server.requestCount) // Verify that no HTTP request was made
+    }
+
+    @Test
+    fun `getDirections - when cache miss and api success - returns from api and saves to cache`() = runTest {
+        // Arrange: Setup DAO to return null and API to return success
+        coEvery { routeLegDao.getRouteLeg(any(), any()) } returns null
+        coEvery { routeLegDao.insertRouteLeg(any()) } just runs
+
+        val json = javaClass.classLoader?.getResource("api/success_response.json")?.readText()
+        assertNotNull("JSON file should be available", json)
+        server.enqueue(MockResponse().setBody(json!!).setResponseCode(200))
+
+        // Act
+        val result = repository.getDirections(dummyFrom, dummyTo)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(Duration.ofSeconds(567), result?.duration)
+        assertEquals(1234, result?.distanceMeters)
+        assertEquals("overview_polyline", result?.polyline)
+        assertEquals(2, result?.steps?.size)
+        assertEquals("Turn left onto Main St", result?.steps?.get(0)?.instruction)
+
+        coVerify(exactly = 1) { routeLegDao.insertRouteLeg(any()) }
+    }
+
+    @Test
+    fun `getDirections - when api error - returns null`() = runTest {
+        // Arrange: Setup DAO to return null and API to return error
+        coEvery { routeLegDao.getRouteLeg(any(), any()) } returns null
+        server.enqueue(MockResponse().setResponseCode(404))
+
+        // Act
+        val result = repository.getDirections(dummyFrom, dummyTo)
+
+        // Assert
+        assertNull(result)
     }
 }

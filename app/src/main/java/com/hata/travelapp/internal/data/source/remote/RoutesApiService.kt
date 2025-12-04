@@ -1,6 +1,5 @@
 package com.hata.travelapp.internal.data.source.remote
 
-import kotlinx.serialization.Serializable
 import retrofit2.http.Body
 import retrofit2.http.Header
 import retrofit2.http.POST
@@ -8,7 +7,7 @@ import retrofit2.http.POST
 /**
  * Retrofitを使用してGoogle Routes APIと通信するためのインターフェース。
  */
-interface DirectionsApiService {
+interface RoutesApiService {
 
     /**
      * 2つの地点間のルート情報を計算する。
@@ -24,34 +23,5 @@ interface DirectionsApiService {
         @Header("X-Goog-Api-Key") apiKey: String,
         @Header("X-Goog-FieldMask") fieldMask: String = "routes.legs,routes.overview_polyline",
         @Body request: ComputeRoutesRequest
-    ): RoutesApiResponse // TODO: Routes API用のレスポンスモデルを作成する
+    ): RoutesApiResponse
 }
-
-// region Request Body Data Classes
-
-@Serializable
-data class ComputeRoutesRequest(
-    val origin: Waypoint,
-    val destination: Waypoint,
-    val travelMode: String = "WALK",
-    val routingPreference: String = "TRAFFIC_AWARE",
-    val languageCode: String = "ja"
-)
-
-@Serializable
-data class Waypoint(
-    val location: LocationWrapper
-)
-
-@Serializable
-data class LocationWrapper(
-    val latLng: LatLngRequest
-)
-
-@Serializable
-data class LatLngRequest(
-    val latitude: Double,
-    val longitude: Double
-)
-
-// endregion
