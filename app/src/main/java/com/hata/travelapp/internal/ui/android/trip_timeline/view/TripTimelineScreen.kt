@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DirectionsWalk
@@ -34,18 +35,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.hata.travelapp.internal.domain.trip.entity.Destination
-import com.hata.travelapp.internal.domain.trip.entity.DestinationId
-import com.hata.travelapp.internal.domain.trip.entity.LatLng
 import com.hata.travelapp.internal.domain.trip.entity.Route
 import com.hata.travelapp.internal.domain.trip.entity.RouteLeg
+import com.hata.travelapp.internal.domain.trip.entity.RoutePoint
+import com.hata.travelapp.internal.domain.trip.entity.RoutePointId
 import com.hata.travelapp.internal.domain.trip.entity.RouteStep
 import com.hata.travelapp.internal.domain.trip.entity.RouteStepTravelMode
-import com.hata.travelapp.internal.domain.trip.entity.ScheduledStop
+import com.hata.travelapp.internal.domain.trip.entity.TimelineItem
 import com.hata.travelapp.internal.domain.trip.entity.TripId
 import java.time.Duration
 import java.time.LocalDate
@@ -112,18 +113,22 @@ private fun TripTimelineContent(
                     .padding(innerPadding)
                     .padding(horizontal = 16.dp),
             ) {
-                items(route.stops.size) { index ->
-                    val stop = route.stops[index]
-                    DestinationCard(stop)
+                items(route.stops) { item ->
+                    // TimelineItemの種類に応じて、表示するカードを切り替える
+                    when (item) {
+                        is TimelineItem.Origin -> OriginCard(item)
+                        is TimelineItem.Waypoint -> WaypointCard(item)
+                        is TimelineItem.FinalDestination -> FinalDestinationCard(item)
+                    }
 
                     // 次の目的地への移動区間があれば表示
-                    route.legs.getOrNull(index)?.let {
-                        LegInfo(it)
-                    }
+                    // LazyColumnのitems(items: List<T>, key: ((item: T) -> Any)?) を使うとより良い
+                    // route.legs.find { it.from.id == item.routePoint.id }?.let {
+                    //     LegInfo(it)
+                    // }
                 }
             }
         } else {
-            // TODO: ルートが見つからなかった場合のUIを実装
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("目的地が設定されていません。")
             }
@@ -131,29 +136,77 @@ private fun TripTimelineContent(
     }
 }
 
+// --- Timeline Item Cards ---
+
 @Composable
-fun DestinationCard(stop: ScheduledStop) {
+fun OriginCard(item: TimelineItem.Origin) {
     val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
 
     Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+        // 出発時刻のみを表示
+        Text(
+            text = item.departureTime.format(timeFormatter),
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.End,
+            modifier = Modifier.width(50.dp)
+        )
+        Card(modifier = Modifier.fillMaxWidth().padding(start = 8.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(item.routePoint.name, style = MaterialTheme.typography.titleLarge)
+                Text("出発", style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+    }
+}
+
+@Composable
+fun WaypointCard(item: TimelineItem.Waypoint) {
+    val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
+
+    Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+        // 到着時刻と出発時刻の両方を表示
         Column(
             modifier = Modifier
                 .width(50.dp)
                 .padding(end = 8.dp),
             horizontalAlignment = Alignment.End
         ) {
-            Text(stop.arrivalTime.format(timeFormatter), style = MaterialTheme.typography.bodySmall)
+            Text(item.arrivalTime.format(timeFormatter), style = MaterialTheme.typography.bodySmall)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(stop.departureTime.format(timeFormatter), style = MaterialTheme.typography.bodySmall)
+            Text(item.departureTime.format(timeFormatter), style = MaterialTheme.typography.bodySmall)
         }
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(stop.destination.name, style = MaterialTheme.typography.titleLarge)
-                Text("滞在時間: ${stop.stayDuration.toMinutes()}分", style = MaterialTheme.typography.bodyMedium)
+                Text(item.routePoint.name, style = MaterialTheme.typography.titleLarge)
+                Text("滞在時間: ${item.stayDuration.toMinutes()}分", style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
 }
+
+@Composable
+fun FinalDestinationCard(item: TimelineItem.FinalDestination) {
+    val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
+
+    Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+        // 到着時刻のみを表示
+        Text(
+            text = item.arrivalTime.format(timeFormatter),
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.End,
+            modifier = Modifier.width(50.dp)
+        )
+        Card(modifier = Modifier.fillMaxWidth().padding(start = 8.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(item.routePoint.name, style = MaterialTheme.typography.titleLarge)
+                Text("到着", style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+    }
+}
+
+
+// --- Leg and Step Info ---
 
 @Composable
 fun LegInfo(leg: RouteLeg) {
@@ -186,49 +239,45 @@ fun StepInfo(step: RouteStep) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(icon, contentDescription = step.travelMode.name, tint = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("${step.duration.toMinutes()} 分 (${step.distanceText})", style = MaterialTheme.typography.bodyMedium)
+                Text("${step.duration.toMinutes()} 分 (${step.distanceMeters}m)", style = MaterialTheme.typography.bodyMedium)
             }
             Text(step.instruction, style = MaterialTheme.typography.bodySmall)
         }
     }
 }
 
+// --- Preview ---
+
 @Preview(showBackground = true)
 @Composable
 fun TripTimelineScreenPreview() {
-    val dummyDestination1 = Destination(DestinationId("1"), "東京駅", 35.68, 139.76, 60, LocalDateTime.now(), LocalDateTime.now())
-    val dummyDestination2 = Destination(DestinationId("2"), "新大阪駅", 34.73, 135.50, 120, LocalDateTime.now(), LocalDateTime.now())
+    val dummyPoint1 = RoutePoint(RoutePointId("1"), "東京駅", 35.68, 139.76, 0, LocalDateTime.now(), LocalDateTime.now())
+    val dummyPoint2 = RoutePoint(RoutePointId("2"), "ホテル", 35.685, 139.77, 120, LocalDateTime.now(), LocalDateTime.now())
+    val dummyPoint3 = RoutePoint(RoutePointId("3"), "新大阪駅", 34.73, 135.50, 0, LocalDateTime.now(), LocalDateTime.now())
 
     val dummyRoute = Route(
         stops = listOf(
-            ScheduledStop(dummyDestination1, LocalDateTime.now(), LocalDateTime.now().plusHours(1)),
-            ScheduledStop(dummyDestination2, LocalDateTime.now().plusHours(4), LocalDateTime.now().plusHours(6))
+            TimelineItem.Origin(dummyPoint1, LocalDateTime.now().plusHours(1)),
+            TimelineItem.Waypoint(dummyPoint2, LocalDateTime.now().plusHours(1).plusMinutes(15), LocalDateTime.now().plusHours(3).plusMinutes(15)),
+            TimelineItem.FinalDestination(dummyPoint3, LocalDateTime.now().plusHours(6))
         ),
         legs = listOf(
             RouteLeg(
-                from = dummyDestination1,
-                to = dummyDestination2,
-                duration = Duration.ofHours(3),
+                from = dummyPoint1,
+                to = dummyPoint2,
+                duration = Duration.ofMinutes(15),
                 polyline = "",
                 steps = listOf(
-                    RouteStep(
-                        duration = Duration.ofMinutes(15),
-                        distanceText = "1.2 km",
-                        startLocation = LatLng(35.68, 139.76),
-                        endLocation = LatLng(35.681, 139.761),
-                        polyline = "",
-                        travelMode = RouteStepTravelMode.WALKING,
-                        instruction = "○○駅まで歩く"
-                    ),
-                    RouteStep(
-                        duration = Duration.ofMinutes(150),
-                        distanceText = "550 km",
-                        startLocation = LatLng(35.681, 139.761),
-                        endLocation = LatLng(34.73, 135.50),
-                        polyline = "",
-                        travelMode = RouteStepTravelMode.UNKNOWN, // For Train
-                        instruction = "新幹線に乗る"
-                    )
+                    RouteStep(Duration.ofMinutes(15), 1200, "", RouteStepTravelMode.WALKING, "ホテルまで歩く")
+                )
+            ),
+            RouteLeg(
+                from = dummyPoint2,
+                to = dummyPoint3,
+                duration = Duration.ofHours(2).plusMinutes(45),
+                polyline = "",
+                steps = listOf(
+                    RouteStep(Duration.ofMinutes(165), 550000, "", RouteStepTravelMode.UNKNOWN, "新幹線に乗る")
                 )
             )
         )

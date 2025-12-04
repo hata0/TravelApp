@@ -8,30 +8,54 @@ import java.time.LocalDateTime
  * UI層は、このオブジェクトを受け取って表示することにのみ責任を持つ。
  */
 data class Route(
-    val stops: List<ScheduledStop>,
+    val stops: List<TimelineItem>,
     val legs: List<RouteLeg>
 )
 
 /**
- * タイムラインに表示される、単一の「目的地」を表す。
- * 到着時刻や出発時刻など、計算済みの情報を持つ。
+ * タイムラインに表示される、一日の旅程における単一の「立ち寄り先」を表す。
+ * 出発地、経由地、最終目的地でそれぞれ異なる情報を持つ、型安全なドメインモデル。
  */
-data class ScheduledStop(
-    val destination: Destination,
-    val arrivalTime: LocalDateTime,
-    val departureTime: LocalDateTime
-) {
-    val stayDuration: Duration
-        get() = Duration.between(arrivalTime, departureTime)
+sealed interface TimelineItem {
+    val routePoint: RoutePoint
+
+    /**
+     * その日の最初の目的地（出発地）。出発時刻のみを持つ。
+     */
+    data class Origin(
+        override val routePoint: RoutePoint,
+        val departureTime: LocalDateTime
+    ) : TimelineItem
+
+    /**
+     * その日の途中の目的地（経由地）。到着時刻と出発時刻の両方を持つ。
+     */
+    data class Waypoint(
+        override val routePoint: RoutePoint,
+        val arrivalTime: LocalDateTime,
+        val departureTime: LocalDateTime
+    ) : TimelineItem {
+        val stayDuration: Duration
+            get() = Duration.between(arrivalTime, departureTime)
+    }
+
+    /**
+     * その日の最後の目的地（到着地）。到着時刻のみを持つ。
+     */
+    data class FinalDestination(
+        override val routePoint: RoutePoint,
+        val arrivalTime: LocalDateTime
+    ) : TimelineItem
 }
 
+
 /**
- * 2つの目的地（ScheduledStop）間の「移動区間」を表す。
+ * 2つの目的地（TimelineItem）間の「移動区間」を表す。
  * 地図に描画するためのポリラインや、詳細な移動ステップのリストを持つ。
  */
 data class RouteLeg(
-    val from: Destination,
-    val to: Destination,
+    val from: RoutePoint,
+    val to: RoutePoint,
     val duration: Duration,
     val polyline: String, // 地図に描画するためのエンコード済みポリライン文字列
     val steps: List<RouteStep>
@@ -60,7 +84,6 @@ enum class RouteStepTravelMode {
 
 /**
  * 緯度経度を表す、ドメイン層のシンプルなデータクラス。
- * （RouteStepからstart/endがなくなったため、現在未使用）
  */
 data class LatLng(
     val lat: Double,

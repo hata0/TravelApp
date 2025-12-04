@@ -1,8 +1,8 @@
 package com.hata.travelapp.internal.data.repository
 
 import com.hata.travelapp.internal.domain.trip.entity.DailyPlan
-import com.hata.travelapp.internal.domain.trip.entity.Destination
-import com.hata.travelapp.internal.domain.trip.entity.DestinationId
+import com.hata.travelapp.internal.domain.trip.entity.RoutePoint
+import com.hata.travelapp.internal.domain.trip.entity.RoutePointId
 import com.hata.travelapp.internal.domain.trip.entity.Trip
 import com.hata.travelapp.internal.domain.trip.entity.TripId
 import com.hata.travelapp.internal.domain.trip.repository.TripRepository
@@ -30,8 +30,8 @@ class FakeTripRepository : TripRepository {
                     DailyPlan(
                         dailyStartTime = tripStartDate.withHour(9),
                         destinations = listOf(
-                            Destination(
-                                id = DestinationId("1"),
+                            RoutePoint(
+                                id = RoutePointId("1"),
                                 name = "札幌",
                                 latitude = 43.06,
                                 longitude = 135.35,
@@ -39,8 +39,8 @@ class FakeTripRepository : TripRepository {
                                 createdAt = LocalDateTime.now(),
                                 updatedAt = LocalDateTime.now()
                             ),
-                            Destination(
-                                id = DestinationId("2"),
+                            RoutePoint(
+                                id = RoutePointId("2"),
                                 name = "小樽",
                                 latitude = 43.19,
                                 longitude = 140.99,
@@ -53,8 +53,8 @@ class FakeTripRepository : TripRepository {
                     DailyPlan(
                         dailyStartTime = tripStartDate.plusDays(1).withHour(10),
                         destinations = listOf(
-                            Destination(
-                                id = DestinationId("3"),
+                            RoutePoint(
+                                id = RoutePointId("3"),
                                 name = "函館",
                                 latitude = 41.76,
                                 longitude = 140.72,

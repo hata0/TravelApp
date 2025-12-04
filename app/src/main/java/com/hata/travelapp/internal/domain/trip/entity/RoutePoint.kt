@@ -3,10 +3,10 @@ package com.hata.travelapp.internal.domain.trip.entity
 import java.time.LocalDateTime
 
 @JvmInline
-value class DestinationId(val value: String)
+value class RoutePointId(val value: String)
 
-data class Destination(
-    val id: DestinationId,
+data class RoutePoint(
+    val id: RoutePointId,
     val name: String,
     val latitude: Double,
     val longitude: Double,

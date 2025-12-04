@@ -5,8 +5,8 @@ import com.hata.travelapp.internal.data.source.remote.DirectionsApiService
 import com.hata.travelapp.internal.data.source.remote.LatLngRequest
 import com.hata.travelapp.internal.data.source.remote.LocationWrapper
 import com.hata.travelapp.internal.data.source.remote.Waypoint
-import com.hata.travelapp.internal.domain.trip.entity.Destination
 import com.hata.travelapp.internal.domain.trip.entity.RouteLeg
+import com.hata.travelapp.internal.domain.trip.entity.RoutePoint
 import com.hata.travelapp.internal.domain.trip.entity.RouteStep
 import com.hata.travelapp.internal.domain.trip.entity.RouteStepTravelMode
 import com.hata.travelapp.internal.domain.trip.repository.DirectionsRepository
@@ -21,7 +21,7 @@ class GoogleDirectionsRepositoryImpl(
     private val apiKey: String
 ) : DirectionsRepository {
 
-    override suspend fun getDirections(from: Destination, to: Destination): RouteLeg? {
+    override suspend fun getDirections(from: RoutePoint, to: RoutePoint): RouteLeg? {
         return try {
             if (apiKey.isBlank()) {
                 println("Google Routes API key is not set.")

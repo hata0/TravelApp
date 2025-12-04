@@ -1,9 +1,9 @@
 package com.hata.travelapp.internal.domain.trip.service
 
-import com.hata.travelapp.internal.domain.trip.entity.Destination
 import com.hata.travelapp.internal.domain.trip.entity.Route
 import com.hata.travelapp.internal.domain.trip.entity.RouteLeg
-import com.hata.travelapp.internal.domain.trip.entity.ScheduledStop
+import com.hata.travelapp.internal.domain.trip.entity.RoutePoint
+import com.hata.travelapp.internal.domain.trip.entity.TimelineItem
 import com.hata.travelapp.internal.domain.trip.repository.DirectionsRepository
 import java.time.Duration
 import java.time.LocalDateTime
@@ -14,7 +14,7 @@ import java.time.LocalDateTime
  */
 interface RouteGenerator {
     suspend fun generate(
-        destinations: List<Destination>,
+        routePoints: List<RoutePoint>,
         startTime: LocalDateTime
     ): Route
 }
@@ -23,42 +23,46 @@ class RouteGeneratorImpl(
     private val directionsRepository: DirectionsRepository
 ) : RouteGenerator {
     override suspend fun generate(
-        destinations: List<Destination>,
+        routePoints: List<RoutePoint>,
         startTime: LocalDateTime
     ): Route {
-        if (destinations.isEmpty()) {
+        if (routePoints.isEmpty()) {
             return Route(stops = emptyList(), legs = emptyList())
         }
 
-        val stops = mutableListOf<ScheduledStop>()
+        val stops = mutableListOf<TimelineItem>()
         val legs = mutableListOf<RouteLeg>()
         var currentTime = startTime
 
-        destinations.forEachIndexed { index, destination ->
+        routePoints.forEachIndexed { index, routePoint ->
             val arrivalTime = currentTime
-            val stayDuration = Duration.ofMinutes(destination.stayDurationInMinutes.toLong())
+            val stayDuration = Duration.ofMinutes(routePoint.stayDurationInMinutes.toLong())
             val departureTime = arrivalTime.plus(stayDuration)
 
-            stops.add(
-                ScheduledStop(
-                    destination = destination,
-                    arrivalTime = arrivalTime,
-                    departureTime = departureTime
-                )
-            )
+            // indexの位置に応じて、生成するTimelineItemを切り替える
+            when (index) {
+                0 -> {
+                    // 最初の目的地：出発時刻のみを持つ
+                    stops.add(TimelineItem.Origin(routePoint, departureTime))
+                }
+                routePoints.lastIndex -> {
+                    // 最後の目的地：到着時刻のみを持つ
+                    stops.add(TimelineItem.FinalDestination(routePoint, arrivalTime))
+                }
+                else -> {
+                    // 途中の目的地：到着と出発の両方を持つ
+                    stops.add(TimelineItem.Waypoint(routePoint, arrivalTime, departureTime))
+                }
+            }
 
             // 次の目的地がある場合、そこまでの移動区間（Leg）を計算する
-            destinations.getOrNull(index + 1)?.let { nextDestination ->
-                // Repositoryから、最適化されたRouteLegオブジェクトを取得する
-                val routeLeg = directionsRepository.getDirections(destination, nextDestination)
+            routePoints.getOrNull(index + 1)?.let { nextRoutePoint ->
+                val routeLeg = directionsRepository.getDirections(routePoint, nextRoutePoint)
 
                 if (routeLeg != null) {
-                    // RouteLegが見つかった場合、その情報をそのまま利用する
                     legs.add(routeLeg)
-                    // 次の到着時刻を、RouteLegが持つ正確な移動時間を使って更新する
                     currentTime = departureTime.plus(routeLeg.duration)
                 } else {
-                    // RouteLegが見つからなかった場合、移動時間はゼロとして扱う
                     currentTime = departureTime
                 }
             }

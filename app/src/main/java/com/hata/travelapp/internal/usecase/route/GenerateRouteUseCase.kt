@@ -2,8 +2,8 @@ package com.hata.travelapp.internal.usecase.route
 
 import com.hata.travelapp.internal.domain.trip.entity.Route
 import com.hata.travelapp.internal.domain.trip.entity.TripId
-import com.hata.travelapp.internal.domain.trip.service.RouteGenerator
 import com.hata.travelapp.internal.domain.trip.repository.TripRepository
+import com.hata.travelapp.internal.domain.trip.service.RouteGenerator
 import java.time.LocalDate
 
 /**
@@ -28,9 +28,9 @@ class GenerateRouteUseCaseImpl(
         // 2. 該当する日付の日程計画を見つける
         val dailyPlan = trip.dailyPlans.find { it.dailyStartTime.toLocalDate() == date } ?: return null
 
-        // 3. ドメインサービスに、その日の目的地リストと開始時刻を渡して、ルート生成を委譲する
+        // 3. ドメインサービスに、その日のルートポイントリストと開始時刻を渡して、ルート生成を委譲する
         return routeGenerator.generate(
-            destinations = dailyPlan.destinations,
+            routePoints = dailyPlan.routePoints,
             startTime = dailyPlan.dailyStartTime
         )
     }
