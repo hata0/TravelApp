@@ -1,5 +1,9 @@
 package com.hata.travelapp.internal.di
 
+import android.content.Context
+import androidx.room.Room
+import com.hata.travelapp.internal.data.source.local.AppDatabase
+import com.hata.travelapp.internal.data.source.local.dao.RouteLegDao
 import com.hata.travelapp.internal.data.source.remote.DirectionsApiService
 import com.hata.travelapp.internal.data.repository.GoogleDirectionsRepositoryImpl
 import com.hata.travelapp.internal.data.repository.FakeTripRepository
@@ -21,6 +25,7 @@ import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFact
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -61,6 +66,24 @@ object AppModule {
         retrofit.create(DirectionsApiService::class.java)
     // endregion
 
+    // region Database
+    @Provides
+    @Singleton
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
+        return Room.databaseBuilder(
+            context,
+            AppDatabase::class.java,
+            "travel-app-database"
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRouteLegDao(appDatabase: AppDatabase): RouteLegDao {
+        return appDatabase.routeLegDao()
+    }
+    // endregion
+
     // region Repositories
     @Provides
     @Singleton
@@ -69,9 +92,11 @@ object AppModule {
     @Provides
     @Singleton
     fun provideDirectionsRepository(
-        apiService: DirectionsApiService
+        apiService: DirectionsApiService,
+        routeLegDao: RouteLegDao
     ): DirectionsRepository = GoogleDirectionsRepositoryImpl(
         apiService = apiService,
+        routeLegDao = routeLegDao,
         apiKey = "" // TODO: APIキーをBuildConfigから取得する
     )
     // endregion
