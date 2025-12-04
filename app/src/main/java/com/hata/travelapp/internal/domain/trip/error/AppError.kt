@@ -1,4 +1,4 @@
-package com.hata.travelapp.internal.domain.error
+package com.hata.travelapp.internal.domain.trip.error
 
 class AppError(
     val code: ErrorCode,
