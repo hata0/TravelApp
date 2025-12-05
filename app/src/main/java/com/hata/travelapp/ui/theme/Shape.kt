@@ -13,7 +13,7 @@ val Shapes = Shapes(
     // Buttonなど: シンプルなカプセル型
     small = RoundedCornerShape(50),
 
-    // Cardなど: 普通の角が丸い長方形に戻す
+    // Cardなど: 普通の角が丸い長方形
     medium = RoundedCornerShape(16.dp),
 
     // FAB(作成ボタン、切り替えボタン)など: 葉っぱ型
