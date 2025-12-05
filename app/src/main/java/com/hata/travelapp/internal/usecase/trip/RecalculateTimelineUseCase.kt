@@ -1,4 +1,4 @@
-package com.hata.travelapp.internal.usecase.route
+package com.hata.travelapp.internal.usecase.trip
 
 import com.hata.travelapp.internal.domain.trip.entity.Route
 import com.hata.travelapp.internal.domain.trip.entity.RouteLeg

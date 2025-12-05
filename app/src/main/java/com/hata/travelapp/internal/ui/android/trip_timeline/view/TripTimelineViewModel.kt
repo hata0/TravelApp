@@ -6,8 +6,8 @@ import com.hata.travelapp.internal.domain.trip.entity.Route
 import com.hata.travelapp.internal.domain.trip.entity.RouteLeg
 import com.hata.travelapp.internal.domain.trip.entity.RoutePointId
 import com.hata.travelapp.internal.domain.trip.entity.TripId
-import com.hata.travelapp.internal.usecase.route.GenerateTimelineUseCase
-import com.hata.travelapp.internal.usecase.route.RecalculateTimelineUseCase
+import com.hata.travelapp.internal.usecase.trip.GenerateTimelineUseCase
+import com.hata.travelapp.internal.usecase.trip.RecalculateTimelineUseCase
 import com.hata.travelapp.internal.usecase.trip.TripUsecase
 import com.hata.travelapp.internal.usecase.trip.UpdateDailyStartTimeUseCase
 import com.hata.travelapp.internal.usecase.trip.UpdateStayDurationUseCase

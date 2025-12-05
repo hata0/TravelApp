@@ -34,7 +34,7 @@ class GoogleDirectionsRepositoryImplTest {
     val mainCoroutineRule = MainCoroutineRule()
 
     private lateinit var server: MockWebServer
-    private lateinit var repository: GoogleDirectionsRepositoryImpl
+    private lateinit var repository: GoogleRoutesRepositoryImpl
     private lateinit var apiService: RoutesApiService
     private val routeLegDao: RouteLegDao = mockk()
 
@@ -54,7 +54,7 @@ class GoogleDirectionsRepositoryImplTest {
             .build()
             .create(RoutesApiService::class.java)
 
-        repository = GoogleDirectionsRepositoryImpl(apiService, routeLegDao, "test_api_key")
+        repository = GoogleRoutesRepositoryImpl(apiService, routeLegDao, "test_api_key")
     }
 
     @After

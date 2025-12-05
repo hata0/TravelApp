@@ -1,8 +1,8 @@
-package com.hata.travelapp.internal.usecase.route
+package com.hata.travelapp.internal.usecase.trip
 
 import com.hata.travelapp.internal.domain.trip.entity.Route
 import com.hata.travelapp.internal.domain.trip.entity.TripId
-import com.hata.travelapp.internal.domain.trip.repository.DirectionsRepository
+import com.hata.travelapp.internal.domain.trip.repository.RoutesRepository
 import com.hata.travelapp.internal.domain.trip.repository.TripRepository
 import com.hata.travelapp.internal.domain.trip.service.TimelineGenerator
 import kotlinx.coroutines.async
@@ -23,7 +23,7 @@ interface GenerateTimelineUseCase {
  */
 class GenerateTimelineUseCaseImpl(
     private val tripRepository: TripRepository,
-    private val directionsRepository: DirectionsRepository,
+    private val routesRepository: RoutesRepository,
     private val timelineGenerator: TimelineGenerator
 ) : GenerateTimelineUseCase {
     override suspend fun execute(tripId: TripId, date: LocalDate): Route? {
@@ -46,7 +46,7 @@ class GenerateTimelineUseCaseImpl(
         // 3. 各地点間の移動区間(RouteLeg)を並列で取得する
         val legs = coroutineScope {
             routePoints.windowed(2).map { (from, to) ->
-                async { directionsRepository.getDirections(from, to) }
+                async { routesRepository.getRoutes(from, to) } // Fix: Changed to getRoutes
             }.mapNotNull { it.await() }
         }
 

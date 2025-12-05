@@ -7,9 +7,10 @@ import com.hata.travelapp.internal.domain.trip.entity.RoutePoint
 import com.hata.travelapp.internal.domain.trip.entity.RoutePointId
 import com.hata.travelapp.internal.domain.trip.entity.Trip
 import com.hata.travelapp.internal.domain.trip.entity.TripId
-import com.hata.travelapp.internal.domain.trip.repository.DirectionsRepository
+import com.hata.travelapp.internal.domain.trip.repository.RoutesRepository
 import com.hata.travelapp.internal.domain.trip.repository.TripRepository
 import com.hata.travelapp.internal.domain.trip.service.TimelineGenerator
+import com.hata.travelapp.internal.usecase.trip.GenerateTimelineUseCaseImpl
 import com.hata.travelapp.util.MainCoroutineRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -32,12 +33,12 @@ class GenerateTimelineUseCaseImplTest {
 
     private lateinit var usecase: GenerateTimelineUseCaseImpl
     private val tripRepository: TripRepository = mockk()
-    private val directionsRepository: DirectionsRepository = mockk()
+    private val routesRepository: RoutesRepository = mockk()
     private val timelineGenerator: TimelineGenerator = mockk()
 
     @Before
     fun setUp() {
-        usecase = GenerateTimelineUseCaseImpl(tripRepository, directionsRepository, timelineGenerator)
+        usecase = GenerateTimelineUseCaseImpl(tripRepository, routesRepository, timelineGenerator)
     }
 
     @Test
@@ -55,7 +56,7 @@ class GenerateTimelineUseCaseImplTest {
         val finalRoute: Route = mockk()
 
         coEvery { tripRepository.getById(tripId) } returns trip
-        coEvery { directionsRepository.getDirections(pointA, pointB) } returns legAB
+        coEvery { routesRepository.getDirections(pointA, pointB) } returns legAB
         every { timelineGenerator.generate(listOf(pointA, pointB), listOf(legAB), startTime) } returns finalRoute
 
         // Act
@@ -64,7 +65,7 @@ class GenerateTimelineUseCaseImplTest {
         // Assert
         assertEquals(finalRoute, result)
         coVerify(exactly = 1) { tripRepository.getById(tripId) }
-        coVerify(exactly = 1) { directionsRepository.getDirections(pointA, pointB) }
+        coVerify(exactly = 1) { routesRepository.getDirections(pointA, pointB) }
         verify(exactly = 1) { timelineGenerator.generate(listOf(pointA, pointB), listOf(legAB), startTime) }
     }
 
@@ -80,7 +81,7 @@ class GenerateTimelineUseCaseImplTest {
 
         // Assert
         assertNull(result)
-        coVerify(exactly = 0) { directionsRepository.getDirections(any(), any()) }
+        coVerify(exactly = 0) { routesRepository.getDirections(any(), any()) }
         verify(exactly = 0) { timelineGenerator.generate(any(), any(), any()) }
     }
 }

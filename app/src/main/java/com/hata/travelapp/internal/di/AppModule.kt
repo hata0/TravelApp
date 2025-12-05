@@ -6,16 +6,16 @@ import com.hata.travelapp.internal.data.source.local.AppDatabase
 import com.hata.travelapp.internal.data.source.local.dao.RouteLegDao
 import com.hata.travelapp.internal.data.source.local.dao.TripDao
 import com.hata.travelapp.internal.data.source.remote.RoutesApiService
-import com.hata.travelapp.internal.data.repository.GoogleDirectionsRepositoryImpl
+import com.hata.travelapp.internal.data.repository.GoogleRoutesRepositoryImpl
 import com.hata.travelapp.internal.data.repository.RoomTripRepository
-import com.hata.travelapp.internal.domain.trip.repository.DirectionsRepository
+import com.hata.travelapp.internal.domain.trip.repository.RoutesRepository
 import com.hata.travelapp.internal.domain.trip.service.TimelineGenerator
 import com.hata.travelapp.internal.domain.trip.service.TimelineGeneratorImpl
 import com.hata.travelapp.internal.domain.trip.repository.TripRepository
-import com.hata.travelapp.internal.usecase.route.GenerateTimelineUseCase
-import com.hata.travelapp.internal.usecase.route.GenerateTimelineUseCaseImpl
-import com.hata.travelapp.internal.usecase.route.RecalculateTimelineUseCase
-import com.hata.travelapp.internal.usecase.route.RecalculateTimelineUseCaseImpl
+import com.hata.travelapp.internal.usecase.trip.GenerateTimelineUseCase
+import com.hata.travelapp.internal.usecase.trip.GenerateTimelineUseCaseImpl
+import com.hata.travelapp.internal.usecase.trip.RecalculateTimelineUseCase
+import com.hata.travelapp.internal.usecase.trip.RecalculateTimelineUseCaseImpl
 import com.hata.travelapp.internal.usecase.trip.TripUsecase
 import com.hata.travelapp.internal.usecase.trip.TripUsecaseImpl
 import com.hata.travelapp.internal.usecase.trip.UpdateDailyStartTimeUseCase
@@ -94,10 +94,10 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideDirectionsRepository(
+    fun provideRoutesRepository(
         apiService: RoutesApiService,
         routeLegDao: RouteLegDao
-    ): DirectionsRepository = GoogleDirectionsRepositoryImpl(
+    ): RoutesRepository = GoogleRoutesRepositoryImpl(
         apiService = apiService,
         routeLegDao = routeLegDao,
         apiKey = "" // TODO: APIキーをBuildConfigから取得する
@@ -121,11 +121,11 @@ object AppModule {
     @Singleton
     fun provideGenerateTimelineUseCase(
         tripRepository: TripRepository,
-        directionsRepository: DirectionsRepository,
+        routesRepository: RoutesRepository,
         timelineGenerator: TimelineGenerator
     ): GenerateTimelineUseCase = GenerateTimelineUseCaseImpl(
         tripRepository = tripRepository,
-        directionsRepository = directionsRepository,
+        routesRepository = routesRepository,
         timelineGenerator = timelineGenerator
     )
 

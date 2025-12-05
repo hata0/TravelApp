@@ -12,22 +12,21 @@ import com.hata.travelapp.internal.domain.trip.entity.RouteLeg
 import com.hata.travelapp.internal.domain.trip.entity.RoutePoint
 import com.hata.travelapp.internal.domain.trip.entity.RouteStep
 import com.hata.travelapp.internal.domain.trip.entity.RouteStepTravelMode
-import com.hata.travelapp.internal.domain.trip.repository.DirectionsRepository
-import kotlinx.serialization.encodeToString
+import com.hata.travelapp.internal.domain.trip.repository.RoutesRepository
 import kotlinx.serialization.json.Json
 import java.time.Duration
 import com.hata.travelapp.internal.data.source.remote.RouteStep as ApiRouteStep
 
 /**
- * Google Routes APIとローカルDBキャッシュを使用してルート情報を取得する、`DirectionsRepository`の実装クラス。
+ * Google Routes APIとローカルDBキャッシュを使用してルート情報を取得する、`RoutesRepository`の実装クラス。
  */
-class GoogleDirectionsRepositoryImpl(
+class GoogleRoutesRepositoryImpl(
     private val apiService: RoutesApiService,
     private val routeLegDao: RouteLegDao,
     private val apiKey: String
-) : DirectionsRepository {
+) : RoutesRepository {
 
-    override suspend fun getDirections(from: RoutePoint, to: RoutePoint): RouteLeg? {
+    override suspend fun getRoutes(from: RoutePoint, to: RoutePoint): RouteLeg? {
         // 1. Check cache first
         val cachedLeg = routeLegDao.getRouteLeg(from.id.value, to.id.value)
         if (cachedLeg != null) {
@@ -69,7 +68,7 @@ class GoogleDirectionsRepositoryImpl(
 
             domainRouteLeg
         } catch (e: Exception) {
-            println("Failed to get directions: ${e.message}")
+            println("Failed to get routes: ${e.message}")
             null
         }
     }
