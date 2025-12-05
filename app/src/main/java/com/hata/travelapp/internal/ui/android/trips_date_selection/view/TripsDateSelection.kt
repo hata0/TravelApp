@@ -1,4 +1,4 @@
-package com.hata.travelapp.internal.ui.android.trip.view
+package com.hata.travelapp.internal.ui.android.trips_date_selection.view
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +27,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hata.travelapp.internal.domain.trip.entity.DailyPlan
 import com.hata.travelapp.internal.domain.trip.entity.TripId
+import com.hata.travelapp.internal.ui.android.trip.view.DateSelectionViewModel
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -35,7 +36,7 @@ import java.time.format.DateTimeFormatter
  * プロジェクトの日程一覧を表示し、特定の日付を選択する画面。
  */
 @Composable
-fun DateSelectionScreen(
+fun TripsDateSelectionScreen(
     viewModel: DateSelectionViewModel = hiltViewModel(),
     tripId: TripId,
     onDateSelect: (LocalDate) -> Unit,

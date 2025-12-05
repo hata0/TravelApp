@@ -21,6 +21,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberMarkerState
 
 /**
  * Googleマップを表示し、目的地の検索やタイムラインへの遷移を行う画面。
@@ -30,16 +31,14 @@ import com.google.maps.android.compose.rememberCameraPositionState
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MapScreen(
+fun TripMapScreen(
     onNavigateToTimeline: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    // TODO: ViewModelからカメラ位置やマーカー情報を取得するように変更する
-    // APIキーが設定されるまでマップは表示されません
-    // 設計書の【開発者TODO】に従い、AndroidManifest.xmlにAPIキーを設定してください
-    val tokyo = LatLng(35.681236, 139.767125)
+    val singapore = LatLng(1.35, 103.87)
+    val singaporeMarkerState = rememberMarkerState(position = singapore)
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(tokyo, 10f)
+        position = CameraPosition.fromLatLngZoom(singapore, 10f)
     }
 
     Scaffold(
@@ -70,7 +69,7 @@ fun MapScreen(
             cameraPositionState = cameraPositionState
         ) {
             Marker(
-//                state = MarkerState(position = tokyo),
+                state = singaporeMarkerState,
                 title = "Tokyo",
                 snippet = "Marker in Tokyo"
             )
@@ -83,6 +82,6 @@ fun MapScreen(
  */
 @Preview(showBackground = true)
 @Composable
-fun MapScreenPreview() {
-    MapScreen(onNavigateToTimeline = {}, onNavigateBack = {})
+fun TripMapScreenPreview() {
+    TripMapScreen(onNavigateToTimeline = {}, onNavigateBack = {})
 }
