@@ -28,7 +28,7 @@ import retrofit2.Retrofit
 import java.time.Duration
 import java.time.LocalDateTime
 
-class GoogleDirectionsRepositoryImplTest {
+class GoogleRoutesRepositoryImplTest { // Renamed class
 
     @get:Rule
     val mainCoroutineRule = MainCoroutineRule()
@@ -63,7 +63,7 @@ class GoogleDirectionsRepositoryImplTest {
     }
 
     @Test
-    fun `getDirections - when cache hit - returns from cache and not call api`() = runTest {
+    fun `getRoutes - when cache hit - returns from cache and not call api`() = runTest { // Renamed test
         // Arrange: Setup DAO to return a cached entity
         val cachedEntity = RouteLegEntity(
             fromRoutePointId = "fromId",
@@ -76,18 +76,18 @@ class GoogleDirectionsRepositoryImplTest {
         coEvery { routeLegDao.getRouteLeg(eq("fromId"), eq("toId")) } returns cachedEntity
 
         // Act
-        val result = repository.getDirections(dummyFrom, dummyTo)
+        val result = repository.getRoutes(dummyFrom, dummyTo)
 
         // Assert
         assertNotNull(result)
         assertEquals(100L, result?.duration?.seconds)
         assertEquals(200, result?.distanceMeters)
         assertEquals("cached_polyline", result?.polyline)
-        assertEquals(0, server.requestCount) // Verify that no HTTP request was made
+        assertEquals(0, server.requestCount)
     }
 
     @Test
-    fun `getDirections - when cache miss and api success - returns from api and saves to cache`() = runTest {
+    fun `getRoutes - when cache miss and api success - returns from api and saves to cache`() = runTest { // Renamed test
         // Arrange: Setup DAO to return null and API to return success
         coEvery { routeLegDao.getRouteLeg(any(), any()) } returns null
         coEvery { routeLegDao.insertRouteLeg(any()) } just runs
@@ -97,7 +97,7 @@ class GoogleDirectionsRepositoryImplTest {
         server.enqueue(MockResponse().setBody(json!!).setResponseCode(200))
 
         // Act
-        val result = repository.getDirections(dummyFrom, dummyTo)
+        val result = repository.getRoutes(dummyFrom, dummyTo)
 
         // Assert
         assertNotNull(result)
@@ -111,13 +111,13 @@ class GoogleDirectionsRepositoryImplTest {
     }
 
     @Test
-    fun `getDirections - when api error - returns null`() = runTest {
+    fun `getRoutes - when api error - returns null`() = runTest { // Renamed test
         // Arrange: Setup DAO to return null and API to return error
         coEvery { routeLegDao.getRouteLeg(any(), any()) } returns null
         server.enqueue(MockResponse().setResponseCode(404))
 
         // Act
-        val result = repository.getDirections(dummyFrom, dummyTo)
+        val result = repository.getRoutes(dummyFrom, dummyTo)
 
         // Assert
         assertNull(result)

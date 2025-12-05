@@ -56,7 +56,7 @@ class GenerateTimelineUseCaseImplTest {
         val finalRoute: Route = mockk()
 
         coEvery { tripRepository.getById(tripId) } returns trip
-        coEvery { routesRepository.getDirections(pointA, pointB) } returns legAB
+        coEvery { routesRepository.getRoutes(pointA, pointB) } returns legAB
         every { timelineGenerator.generate(listOf(pointA, pointB), listOf(legAB), startTime) } returns finalRoute
 
         // Act
@@ -65,7 +65,7 @@ class GenerateTimelineUseCaseImplTest {
         // Assert
         assertEquals(finalRoute, result)
         coVerify(exactly = 1) { tripRepository.getById(tripId) }
-        coVerify(exactly = 1) { routesRepository.getDirections(pointA, pointB) }
+        coVerify(exactly = 1) { routesRepository.getRoutes(pointA, pointB) }
         verify(exactly = 1) { timelineGenerator.generate(listOf(pointA, pointB), listOf(legAB), startTime) }
     }
 
@@ -81,7 +81,7 @@ class GenerateTimelineUseCaseImplTest {
 
         // Assert
         assertNull(result)
-        coVerify(exactly = 0) { routesRepository.getDirections(any(), any()) }
+        coVerify(exactly = 0) { routesRepository.getRoutes(any(), any()) }
         verify(exactly = 0) { timelineGenerator.generate(any(), any(), any()) }
     }
 }
