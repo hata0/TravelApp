@@ -55,18 +55,21 @@ class TripsNewViewModel @Inject constructor(
      */
     fun createTrip() {
         viewModelScope.launch {
-            val currentProjectName = _projectName.value
-            val currentStartDate = _startDate.value
-            val currentEndDate = _endDate.value
+            val title = _projectName.value
+            val start = _startDate.value
+            val end = _endDate.value
 
-            if (currentProjectName.isNotBlank() && currentStartDate != null && currentEndDate != null) {
-                val newTripId = tripUsecase.create(
-                    title = currentProjectName,
-                    startedAt = currentStartDate,
-                    endedAt = currentEndDate
-                )
-                _navigateToTrip.emit(newTripId.value)
+            // Guard clause for invalid state
+            if (title.isBlank() || start == null || end == null) {
+                return@launch
             }
+
+            val newTripId = tripUsecase.create(
+                title = title,
+                startedAt = start,
+                endedAt = end
+            )
+            _navigateToTrip.emit(newTripId.value)
         }
     }
 

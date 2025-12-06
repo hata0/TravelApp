@@ -19,6 +19,7 @@ import com.hata.travelapp.internal.domain.trip.entity.TripId
 import com.hata.travelapp.internal.ui.android.home.view.HomeScreen
 import com.hata.travelapp.internal.ui.android.trip.view.DateSelectionScreen
 import com.hata.travelapp.internal.ui.android.trip_timeline.view.TripTimelineScreen
+import com.hata.travelapp.internal.ui.android.trip_map.view.MapScreen
 import com.hata.travelapp.internal.ui.android.trips_new.view.TripsNewScreen
 import com.hata.travelapp.ui.theme.TravelAppTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -62,10 +63,9 @@ fun ApplicationNavigationHost(
         composable("home") {
             HomeScreen(
                 onNavigateToNewProject = { navController.navigate("trips/new") },
-                // プロジェクトをクリックしたら、タイムラインではなく日程選択画面に遷移する
                 onProjectClick = { projectId -> navController.navigate("trip/$projectId/dates") },
                 onEditProject = { projectId -> navController.navigate("trips/new?projectId=$projectId") },
-                onDeleteProject = { /* TODO */ }
+                onDeleteProject = { /* TODO: Implement delete logic */ }
             )
         }
         composable("trips/new") {
@@ -87,10 +87,9 @@ fun ApplicationNavigationHost(
         ) { backStackEntry ->
             val tripId = backStackEntry.arguments?.getString("tripId") ?: return@composable
             DateSelectionScreen(
-                tripId = TripId(tripId),
                 // 日付を選択したら、tripIdとdateを渡してタイムライン画面に遷移
-                onDateSelect = { date ->
-                    navController.navigate("trip/$tripId/timeline/${date}")
+                onDateSelect = { selectedTripId, date ->
+                    navController.navigate("trip/$selectedTripId/timeline/$date")
                 },
                 onNavigateBack = { navController.popBackStack() }
             )
@@ -109,7 +108,34 @@ fun ApplicationNavigationHost(
                 tripId = TripId(tripId),
                 date = LocalDate.parse(dateStr),
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToMap = { /* TODO */ }
+                onNavigateToMap = {
+                    navController.navigate("trip/$tripId/map/$dateStr")
+                }
+            )
+        }
+        composable(
+            route = "trip/{tripId}/map/{date}",
+            arguments = listOf(
+                navArgument("tripId") { type = NavType.StringType },
+                navArgument("date") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val tripId = backStackEntry.arguments?.getString("tripId") ?: return@composable
+            val dateStr = backStackEntry.arguments?.getString("date") ?: return@composable
+
+            MapScreen(
+                tripId = TripId(tripId),
+                date = LocalDate.parse(dateStr),
+                onNavigateToTimeline = { 
+                    // When navigating from Map to Timeline, we probably want to just pop back 
+                    // or navigate anew. Popping back is safer if we treat Timeline as the parent.
+                    // But if "Add Destination" was done, we want to refresh timeline.
+                    // Since specific guidance is "onNavigateToTimeline", let's assume popBack is sufficient
+                    // if the TimelineViewModel observes the repository.
+                    // Or we can navigate exactly to the timeline route.
+                    navController.popBackStack()
+                },
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

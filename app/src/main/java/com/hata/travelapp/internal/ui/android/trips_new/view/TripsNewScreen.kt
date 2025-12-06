@@ -14,11 +14,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -42,11 +44,11 @@ import kotlinx.coroutines.flow.collectLatest
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 /**
  * 新規旅行プロジェクトの作成・編集画面のエントリーポイント。
- * ViewModelの取得と、ナビゲーションイベントの処理を担当する。
  */
 @Composable
 fun TripsNewScreen(
@@ -58,7 +60,6 @@ fun TripsNewScreen(
     val startDate by viewModel.startDate.collectAsStateWithLifecycle()
     val endDate by viewModel.endDate.collectAsStateWithLifecycle()
 
-    // ViewModelからのナビゲーションイベントを監視
     LaunchedEffect(Unit) {
         viewModel.navigateToTrip.collectLatest { tripId ->
             onNavigateToTrip(tripId)
@@ -79,7 +80,6 @@ fun TripsNewScreen(
 
 /**
  * `TripsNewScreen`の実際のUIコンテンツ。
- * 状態を持たないComposableにすることで、プレビューやテストが容易になる。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,14 +93,21 @@ private fun TripsNewScreenContent(
     onCreateClick: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    // DatePickerの表示状態はUI固有の状態なので、ここでrememberする
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
     val dateFormatter = remember { DateTimeFormatter.ofPattern("yyyy年MM月dd日(E)") }
 
-    // 出発日選択ダイアログ
     if (showStartDatePicker) {
-        val datePickerState = rememberDatePickerState()
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = startDate?.toEpochSecond(ZoneOffset.UTC)?.times(1000),
+            yearRange = (LocalDateTime.now().year..LocalDateTime.now().year + 5),
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    // If endDate is selected, prevent selecting dates after it.
+                    return endDate?.let { utcTimeMillis <= it.toEpochSecond(ZoneOffset.UTC) * 1000 } ?: true
+                }
+            }
+        )
         DatePickerDialog(
             onDismissRequest = { showStartDatePicker = false },
             confirmButton = {
@@ -117,9 +124,17 @@ private fun TripsNewScreenContent(
         ) { DatePicker(state = datePickerState) }
     }
 
-    // 帰宅日選択ダイアログ
     if (showEndDatePicker) {
-        val datePickerState = rememberDatePickerState()
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = endDate?.toEpochSecond(ZoneOffset.UTC)?.times(1000),
+            yearRange = (LocalDateTime.now().year..LocalDateTime.now().year + 5),
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    // If startDate is selected, prevent selecting dates before it.
+                    return startDate?.let { utcTimeMillis >= it.toEpochSecond(ZoneOffset.UTC) * 1000 } ?: true
+                }
+            }
+        )
         DatePickerDialog(
             onDismissRequest = { showEndDatePicker = false },
             confirmButton = {
@@ -139,7 +154,7 @@ private fun TripsNewScreenContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("旅程作成") }, // TODO: 編集モードの場合はタイトルを変更
+                title = { Text("旅程作成") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
@@ -193,7 +208,7 @@ private fun TripsNewScreenContent(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = projectName.isNotBlank() && startDate != null && endDate != null
             ) {
-                Text("作成") // TODO: 編集モードの場合は「変更を保存」に変更
+                Text("作成")
             }
         }
     }

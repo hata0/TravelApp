@@ -1,5 +1,6 @@
 package com.hata.travelapp.internal.usecase.trip
 
+import com.hata.travelapp.internal.domain.trip.entity.DailyPlan
 import com.hata.travelapp.internal.domain.trip.entity.Trip
 import com.hata.travelapp.internal.domain.trip.entity.TripId
 import com.hata.travelapp.internal.domain.trip.repository.TripRepository
@@ -37,6 +38,20 @@ class TripUsecaseImpl(
         endedAt: LocalDateTime
     ): TripId {
         val now = LocalDateTime.now()
+
+        val dailyPlans = mutableListOf<DailyPlan>()
+        var currentDate = startedAt.toLocalDate()
+        val finalDate = endedAt.toLocalDate()
+        while (!currentDate.isAfter(finalDate)) {
+            dailyPlans.add(
+                DailyPlan(
+                    dailyStartTime = currentDate.atStartOfDay(), // or a default time
+                    routePoints = emptyList()
+                )
+            )
+            currentDate = currentDate.plusDays(1)
+        }
+
         val trip = Trip(
             id = TripId(UUID.randomUUID().toString()),
             title = title,
@@ -44,7 +59,7 @@ class TripUsecaseImpl(
             endedAt = endedAt,
             createdAt = now,
             updatedAt = now,
-            dailyPlans = emptyList() // 新しいデータ構造に対応
+            dailyPlans = dailyPlans
         )
         tripRepository.create(trip)
         return trip.id
