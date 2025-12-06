@@ -19,7 +19,6 @@ import com.hata.travelapp.internal.domain.trip.entity.TripId
 import com.hata.travelapp.internal.ui.android.home.view.HomeScreen
 import com.hata.travelapp.internal.ui.android.trip.view.DateSelectionScreen
 import com.hata.travelapp.internal.ui.android.trip_timeline.view.TripTimelineScreen
-import com.hata.travelapp.internal.ui.android.trip_map.view.MapScreen
 import com.hata.travelapp.internal.ui.android.trips_new.view.TripsNewScreen
 import com.hata.travelapp.ui.theme.TravelAppTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -122,21 +121,7 @@ fun ApplicationNavigationHost(
         ) { backStackEntry ->
             val tripId = backStackEntry.arguments?.getString("tripId") ?: return@composable
             val dateStr = backStackEntry.arguments?.getString("date") ?: return@composable
-
-            MapScreen(
-                tripId = TripId(tripId),
-                date = LocalDate.parse(dateStr),
-                onNavigateToTimeline = { 
-                    // When navigating from Map to Timeline, we probably want to just pop back 
-                    // or navigate anew. Popping back is safer if we treat Timeline as the parent.
-                    // But if "Add Destination" was done, we want to refresh timeline.
-                    // Since specific guidance is "onNavigateToTimeline", let's assume popBack is sufficient
-                    // if the TimelineViewModel observes the repository.
-                    // Or we can navigate exactly to the timeline route.
-                    navController.popBackStack()
-                },
-                onNavigateBack = { navController.popBackStack() }
-            )
+            
         }
     }
 }
