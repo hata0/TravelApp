@@ -17,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.hata.travelapp.internal.domain.trip.entity.TripId
 import com.hata.travelapp.internal.ui.android.home.view.HomeScreen
+import com.hata.travelapp.internal.ui.android.trip_map.view.TripMapScreen
 import com.hata.travelapp.internal.ui.android.trip_timeline.view.TripTimelineScreen
 import com.hata.travelapp.internal.ui.android.trips_date_selection.view.TripsDateSelectionScreen
 import com.hata.travelapp.internal.ui.android.trips_new.view.TripsNewScreen
@@ -100,8 +101,7 @@ fun ApplicationNavigationHost(
 
             TripTimelineScreen(
                 onNavigateBack = { navController.navigate("trips/${tripId}/date-selection") },
-                onNavigateToMap = {},
-//                onNavigateToMap = { navController.navigate("trips/${tripId}/map") },
+                onNavigateToMap = { navController.navigate("trips/${tripId}/map") },
                 tripId = TripId(tripId),
                 date = LocalDate.parse(dateStr),
 //                onNavigateToMap = {
@@ -109,17 +109,17 @@ fun ApplicationNavigationHost(
 //                }
             )
         }
-//        composable(
-//            route = "trips/{tripId}/map",
-//            arguments = listOf(
-//                navArgument("tripId") { type = NavType.StringType },
-//            )
-//        ) { backstackEntry ->
-//            val tripId = backstackEntry.arguments?.getString("tripId")
-//            TripMapScreen(
-//                onNavigateBack = { navController.navigate("trips/${tripId}/date-selection") },
-//                onNavigateToTimeline = { navController.navigate("trips/${tripId}/timeline") }
-//            )
-//        }
+        composable(
+            route = "trips/{tripId}/map",
+            arguments = listOf(
+                navArgument("tripId") { type = NavType.StringType },
+            )
+        ) { backstackEntry ->
+            val tripId = backstackEntry.arguments?.getString("tripId")
+            TripMapScreen(
+                onNavigateBack = { navController.navigate("trips/${tripId}/date-selection") },
+                onNavigateToTimeline = { navController.navigate("trips/${tripId}/timeline") }
+            )
+        }
     }
 }
