@@ -6,6 +6,13 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -19,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -27,6 +35,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,42 +48,85 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.collectLatest
 import com.hata.travelapp.R
 import java.time.Instant
+import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 /**
- * 新規旅行プロジェクトの作成・編集画面。
- * プロジェクト名、出発日、帰宅日、説明を入力する。
- *
- * @param onNavigateToDateSelection 「作成」または「変更を保存」ボタンがクリックされたときのコールバック。
- * @param onNavigateBack 戻るボタンがクリックされたときのコールバック。
+ * 新規旅行プロジェクトの作成・編集画面のエントリーポイント。
+ */
+@Composable
+fun TripsNewScreen(
+    viewModel: TripsNewViewModel = hiltViewModel(),
+    onNavigateToTrip: (String) -> Unit,
+    onNavigateBack: () -> Unit
+) {
+    val projectName by viewModel.projectName.collectAsStateWithLifecycle()
+    val startDate by viewModel.startDate.collectAsStateWithLifecycle()
+    val endDate by viewModel.endDate.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.navigateToTrip.collectLatest { tripId ->
+            onNavigateToTrip(tripId)
+        }
+    }
+
+    TripsNewScreenContent(
+        projectName = projectName,
+        startDate = startDate,
+        endDate = endDate,
+        onProjectNameChange = viewModel::onProjectNameChange,
+        onStartDateChange = viewModel::onStartDateChange,
+        onEndDateChange = viewModel::onEndDateChange,
+        onCreateClick = viewModel::createTrip,
+        onNavigateBack = onNavigateBack
+    )
+}
+
+/**
+ * `TripsNewScreen`の実際のUIコンテンツ。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TripsNewScreen(
-    onNavigateToDateSelection: () -> Unit,
+private fun TripsNewScreenContent(
+    projectName: String,
+    startDate: LocalDateTime?,
+    endDate: LocalDateTime?,
+    onProjectNameChange: (String) -> Unit,
+    onStartDateChange: (LocalDateTime) -> Unit,
+    onEndDateChange: (LocalDateTime) -> Unit,
+    onCreateClick: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    // TODO: ViewModelに状態管理を移行する
-    var projectName by remember { mutableStateOf("") }
-    var startDate by remember { mutableStateOf<Long?>(null) }
-    var endDate by remember { mutableStateOf<Long?>(null) }
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("yyyy年MM月dd日(E)") }
 
-    val dateFormatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日(E)")
-
-    // 出発日選択ダイアログ
     if (showStartDatePicker) {
-        val datePickerState = rememberDatePickerState()
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = startDate?.toEpochSecond(ZoneOffset.UTC)?.times(1000),
+            yearRange = (LocalDateTime.now().year..LocalDateTime.now().year + 5),
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    // If endDate is selected, prevent selecting dates after it.
+                    return endDate?.let { utcTimeMillis <= it.toEpochSecond(ZoneOffset.UTC) * 1000 } ?: true
+                }
+            }
+        )
         DatePickerDialog(
             onDismissRequest = { showStartDatePicker = false },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        startDate = datePickerState.selectedDateMillis
+                        datePickerState.selectedDateMillis?.let {
+                            onStartDateChange(Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDateTime())
+                        }
                         showStartDatePicker = false
                     }
                 ) { Text("OK") }
@@ -84,15 +136,25 @@ fun TripsNewScreen(
         ) { DatePicker(state = datePickerState) }
     }
 
-    // 帰宅日選択ダイアログ
     if (showEndDatePicker) {
-        val datePickerState = rememberDatePickerState()
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = endDate?.toEpochSecond(ZoneOffset.UTC)?.times(1000),
+            yearRange = (LocalDateTime.now().year..LocalDateTime.now().year + 5),
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    // If startDate is selected, prevent selecting dates before it.
+                    return startDate?.let { utcTimeMillis >= it.toEpochSecond(ZoneOffset.UTC) * 1000 } ?: true
+                }
+            }
+        )
         DatePickerDialog(
             onDismissRequest = { showEndDatePicker = false },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        endDate = datePickerState.selectedDateMillis
+                        datePickerState.selectedDateMillis?.let {
+                            onEndDateChange(Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDateTime())
+                        }
                         showEndDatePicker = false
                     }
                 ) { Text("OK") }
@@ -135,7 +197,7 @@ fun TripsNewScreen(
             ) {
                 TextField(
                     value = projectName,
-                    onValueChange = { projectName = it },
+                    onValueChange = onProjectNameChange,
                     label = { Text("旅行タイトル") },
                     leadingIcon = {
                          Icon(Icons.Default.Place, contentDescription = null, tint = Color.White)
@@ -179,8 +241,9 @@ fun TripsNewScreen(
                 Spacer(modifier = Modifier.weight(1f))
 
                 Button(
-                    onClick = onNavigateToDateSelection,
-                    modifier = Modifier.fillMaxWidth()
+                    onClick = onCreateClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = projectName.isNotBlank() && startDate != null && endDate != null
                 ) {
                     Text("作成") // TODO: 編集モードの場合は「変更を保存」に変更
                 }
@@ -192,7 +255,7 @@ fun TripsNewScreen(
 @Composable
 private fun DateRow(
     label: String,
-    selectedDate: Long?,
+    selectedDate: LocalDateTime?,
     dateFormatter: DateTimeFormatter,
     onClick: () -> Unit,
 ) {
@@ -228,9 +291,7 @@ private fun DateRow(
 
             // 日付テキスト
             Text(
-                text = selectedDate?.let {
-                    Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate().format(dateFormatter)
-                } ?: "年 / 月 / 日",
+                text = selectedDate?.format(dateFormatter) ?: "日付を選択",
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.White,
                 modifier = Modifier.weight(1f)
@@ -246,11 +307,17 @@ private fun DateRow(
     }
 }
 
-/**
- * `NewProjectScreen`のプレビュー用Composable。
- */
 @Preview(showBackground = true)
 @Composable
-fun NewProjectScreenPreview() {
-    TripsNewScreen(onNavigateToDateSelection = {}, onNavigateBack = {})
+fun TripsNewScreenPreview() {
+    TripsNewScreenContent(
+        projectName = "北海道旅行",
+        startDate = LocalDateTime.now(),
+        endDate = LocalDateTime.now().plusDays(3),
+        onProjectNameChange = {},
+        onStartDateChange = {},
+        onEndDateChange = {},
+        onCreateClick = {},
+        onNavigateBack = {}
+    )
 }

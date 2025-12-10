@@ -21,6 +21,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -28,26 +30,51 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hata.travelapp.R
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.hata.travelapp.internal.domain.trip.entity.DailyPlan
+import com.hata.travelapp.internal.ui.android.trip.view.DateSelectionViewModel
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  * プロジェクトの日程一覧を表示し、特定の日付を選択する画面。
- *
- * @param onNavigateToMap 日付が選択されたときのコールバック。選択された日付を渡す。
- * @param onNavigateBack 戻るボタンがクリックされたときのコールバック。
+ */
+@Composable
+fun TripsDateSelectionScreen(
+    viewModel: DateSelectionViewModel = hiltViewModel(),
+    onDateSelect: (String, LocalDate) -> Unit,
+    onNavigateBack: () -> Unit
+) {
+    val tripTitle by viewModel.tripTitle.collectAsStateWithLifecycle()
+    val dailyPlans by viewModel.dailyPlans.collectAsStateWithLifecycle()
+
+    DateSelectionScreenContent(
+        tripTitle = tripTitle,
+        dailyPlans = dailyPlans,
+        onDateSelect = { date -> onDateSelect(viewModel.tripId, date) },
+        onNavigateBack = onNavigateBack
+    )
+}
+
+/**
+ * `DateSelectionScreen`の実際のUIコンテンツ。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TripsDateSelectionScreen(
-    onNavigateToMap: (String) -> Unit,
+private fun DateSelectionScreenContent(
+    tripTitle: String,
+    dailyPlans: List<DailyPlan>,
+    onDateSelect: (LocalDate) -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    // TODO: ViewModelから実際の日程リストを取得するように変更する
-    val dates = listOf("2024/08/01 (木)", "2024/08/02 (金)", "2024/08/03 (土)")
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("yyyy年MM月dd日(E)") }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("日程を選択") },
+                title = { Text(tripTitle) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
@@ -66,15 +93,15 @@ fun TripsDateSelectionScreen(
                     .fillMaxSize()
                     .padding(16.dp)
             ) {
-                items(dates) { date ->
+                items(dailyPlans) { dailyPlan ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
-                            .clickable { onNavigateToMap(date) }
+                            .clickable { onDateSelect(dailyPlan.dailyStartTime.toLocalDate()) }
                     ) {
                         Text(
-                            text = date,
+                            text = dailyPlan.dailyStartTime.format(dateFormatter),
                             modifier = Modifier.padding(16.dp)
                         )
                     }
@@ -101,6 +128,21 @@ fun TripsDateSelectionScreen(
  */
 @Preview(showBackground = true)
 @Composable
-fun TripsDateSelectionScreenPreview() {
-    TripsDateSelectionScreen(onNavigateToMap = {}, onNavigateBack = {})
+fun DateSelectionScreenPreview() {
+    val dummyPlans = listOf(
+        DailyPlan(
+            dailyStartTime = LocalDateTime.now(),
+            routePoints = emptyList()
+        ),
+        DailyPlan(
+            dailyStartTime = LocalDateTime.now().plusDays(1),
+            routePoints = emptyList()
+        )
+    )
+    DateSelectionScreenContent(
+        tripTitle = "北海道旅行",
+        dailyPlans = dummyPlans,
+        onDateSelect = {},
+        onNavigateBack = {}
+    )
 }

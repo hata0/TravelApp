@@ -18,12 +18,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.DirectionsWalk
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -32,12 +38,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.VerticalDivider
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,88 +52,61 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hata.travelapp.R
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.hata.travelapp.internal.domain.trip.entity.Route
+import com.hata.travelapp.internal.domain.trip.entity.RouteLeg
+import com.hata.travelapp.internal.domain.trip.entity.RoutePoint
+import com.hata.travelapp.internal.domain.trip.entity.RoutePointId
+import com.hata.travelapp.internal.domain.trip.entity.TimelineItem
+import com.hata.travelapp.internal.domain.trip.entity.TripId
+import java.time.Duration
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import kotlin.math.roundToInt
 
-/**
- * タイムラインの各項目を表すデータ構造。
- * sealed interface を利用して、項目種別（出発地、目的地など）を型レベルで安全に区別する。
- */
-sealed interface TimelineItem {
-    /** 出発地点を表すデータクラス */
-    data class StartPoint(val name: String, val departureTime: String) : TimelineItem
-    /** 目的地の情報を表すデータクラス */
-    data class Destination(val name: String, val arrivalTime: String, val departureTime: String, val stayTime: String) : TimelineItem
-    /** 最終到着地点を表すデータクラス */
-    data class EndPoint(val name: String, val arrivalTime: String) : TimelineItem
-    /** 目的地間の移動情報を表すデータクラス */
-    data class Travel(val travelTime: String, val transportModeIcon: ImageVector) : TimelineItem
-}
-
-/**
- * タイムライン画面全体を構成するComposable関数。
- * Scaffoldを使用して、TopAppBar、FloatingActionButton、およびタイムラインのリストを配置する。
- */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripTimelineScreen(
+    viewModel: TripTimelineViewModel = hiltViewModel(),
+    tripId: TripId,
+    date: LocalDate,
     onNavigateToMap: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    // TODO: This is a temporary state for UI development.
-    // It will be moved to a ViewModel later.
-    val (timelineItems, setTimelineItems) = remember {
-        mutableStateOf(listOf(
-            TimelineItem.StartPoint(name = "自宅", departureTime = "10:00"),
-//            TimelineItem.Travel(travelTime = "電車 15分", transportModeIcon = Icons.Default.Train),
-            TimelineItem.Destination(name = "東京駅", arrivalTime = "10:15", departureTime = "10:30", stayTime = "滞在 15分"),
-//            TimelineItem.Travel(travelTime = "電車 15分", transportModeIcon = Icons.Default.Train),
-            TimelineItem.EndPoint(name = "ホテル", arrivalTime = "10:45")
-        ))
+    val route by viewModel.route.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+
+    LaunchedEffect(tripId, date) {
+        viewModel.loadTimeline(tripId, date)
     }
 
-    var showTimePicker by remember { mutableStateOf(false) }
-    var editingItemIndex by remember { mutableStateOf<Int?>(null) }
-    var isEditingStayTime by remember { mutableStateOf(false) }
+    TripTimelineContent(
+        route = route,
+        isLoading = isLoading,
+        onNavigateToMap = onNavigateToMap,
+        onNavigateBack = onNavigateBack,
+        onDailyStartTimeChanged = { viewModel.onDailyStartTimeChanged(it) },
+        onStayDurationChanged = { pointId, duration -> viewModel.onStayDurationChanged(pointId, duration) }
+    )
+}
 
-    // 時刻選択ダイアログの表示ロジック
-    if (showTimePicker) {
-        val timePickerState = rememberTimePickerState()
-        AlertDialog(
-            onDismissRequest = { showTimePicker = false },
-            title = { Text(if (isEditingStayTime) "滞在時間を選択" else "出発時刻を選択") },
-            text = { TimePicker(state = timePickerState) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val newHour = timePickerState.hour
-                        val newMinute = timePickerState.minute
-                        editingItemIndex?.let { index ->
-                            val newItems = timelineItems.toMutableList()
-                            when (val itemToEdit = newItems[index]) {
-                                is TimelineItem.StartPoint -> {
-                                    newItems[index] = itemToEdit.copy(departureTime = String.format("%02d:%02d", newHour, newMinute))
-                                }
-                                is TimelineItem.Destination -> {
-                                    newItems[index] = itemToEdit.copy(stayTime = "滞在 ${newHour}時間 ${newMinute}分")
-                                }
-                                else -> {}
-                            }
-                            setTimelineItems(newItems)
-                        }
-                        showTimePicker = false
-                    }
-                ) { Text("OK") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showTimePicker = false }) { Text("キャンセル") }
-            }
-        )
-    }
-
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TripTimelineContent(
+    route: Route?,
+    isLoading: Boolean,
+    onNavigateToMap: () -> Unit,
+    onNavigateBack: () -> Unit,
+    onDailyStartTimeChanged: (LocalDateTime) -> Unit,
+    onStayDurationChanged: (RoutePointId, Int) -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -147,167 +127,355 @@ fun TripTimelineScreen(
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = 16.dp),
-                contentPadding = PaddingValues(bottom = 80.dp) // FABと被らないように余白を追加
-            ) {
-                itemsIndexed(timelineItems) { index, item ->
-                    when (item) {
-                        is TimelineItem.StartPoint -> StartPointCard(
-                            item = item,
-                            onDepartureTimeClick = {
-                                editingItemIndex = index
-                                isEditingStayTime = false
-                                showTimePicker = true
-                            }
-                        )
-                        is TimelineItem.Destination -> DestinationCard(
-                            item = item,
-                            onStayTimeClick = {
-                                editingItemIndex = index
-                                isEditingStayTime = true
-                                showTimePicker = true
-                            }
-                        )
-                        is TimelineItem.EndPoint -> EndPointCard(item)
-                        is TimelineItem.Travel -> TravelInfo(item)
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else if (route != null) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(bottom = 80.dp) // FABと被らないように余白を追加
+                ) {
+                    itemsIndexed(route.stops) { index, item ->
+                        when (item) {
+                            is TimelineItem.Origin -> OriginCard(
+                                item = item,
+                                onDepartureTimeChanged = { newTime ->
+                                    onDailyStartTimeChanged(newTime)
+                                }
+                            )
+                            is TimelineItem.Waypoint -> WaypointCard(
+                                item = item,
+                                onStayDurationChanged = { duration ->
+                                    onStayDurationChanged(item.routePoint.id, duration)
+                                }
+                            )
+                            is TimelineItem.FinalDestination -> FinalDestinationCard(item)
+                        }
+                        route.legs.getOrNull(index)?.let {
+                            LegInfo(it)
+                        }
                     }
                 }
-            }
 
-            // 左下のキャラクター画像 (Char2)
-            Image(
-                painter = painterResource(id = R.drawable.char2),
-                contentDescription = null,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(16.dp)
-                    .padding(bottom = 80.dp) // FABと重ならないように少し上に配置
-                    .size(200.dp) // 150.dp -> 200.dp
-                    .clip(MaterialTheme.shapes.medium)
-                    .alpha(0.9f)
-            )
+                // 左下のキャラクター画像 (Char2)
+                Image(
+                    painter = painterResource(id = R.drawable.char2),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(16.dp)
+                        .padding(bottom = 80.dp) // FABと重ならないように少し上に配置
+                        .size(200.dp) // 150.dp -> 200.dp
+                        .clip(MaterialTheme.shapes.medium)
+                        .alpha(0.9f)
+                )
+            }
+        } else {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("目的地が設定されていません。")
+            }
         }
     }
 }
 
-/**
- * 出発地点の情報を表示するカードUI。
- * 背景色を変えることで、他の目的地と視覚的に区別する。
- */
+// --- Timeline Item Cards ---
+
 @Composable
-fun StartPointCard(item: TimelineItem.StartPoint, onDepartureTimeClick: () -> Unit) {
+fun OriginCard(
+    item: TimelineItem.Origin,
+    onDepartureTimeChanged: (LocalDateTime) -> Unit
+) {
+    val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
+    var showTimePicker by remember { mutableStateOf(false) }
+
     Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-        Column(
-            modifier = Modifier.fillMaxHeight().padding(end = 8.dp),
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier
+                .width(50.dp)
+                .fillMaxHeight()
+                .clickable { showTimePicker = true },
+            contentAlignment = Alignment.BottomEnd
         ) {
             Text(
-                text = item.departureTime,
+                text = item.departureTime.format(timeFormatter),
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.clickable { onDepartureTimeClick() }
+                textAlign = TextAlign.End,
+                modifier = Modifier.padding(end = 4.dp, bottom = 16.dp), // Align with card content padding
+                color = MaterialTheme.colorScheme.primary
             )
         }
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+            modifier = Modifier.fillMaxWidth().padding(start = 8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("出発", style = MaterialTheme.typography.labelSmall)
-                Text(item.name, style = MaterialTheme.typography.titleLarge)
+                Text(item.routePoint.name, style = MaterialTheme.typography.titleLarge)
+                Text("出発", style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
+
+    if (showTimePicker) {
+        TimePickerDialog(
+            initialTime = item.departureTime,
+            onTimeSelected = {
+                onDepartureTimeChanged(it)
+                showTimePicker = false
+            },
+            onDismiss = { showTimePicker = false }
+        )
+    }
 }
 
-/**
- * 目的地の情報を表示するカードUI。
- * 到着時刻、出発時刻、滞在時間などの情報を表示する。
- */
 @Composable
-fun DestinationCard(item: TimelineItem.Destination, onStayTimeClick: () -> Unit) {
+fun WaypointCard(
+    item: TimelineItem.Waypoint,
+    onStayDurationChanged: (Int) -> Unit
+) {
+    val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
+    var showDurationEditor by remember { mutableStateOf(false) }
+    var tempDurationText by remember {
+        mutableStateOf(item.stayDuration.toMinutes().toString())
+    }
+
     Row(modifier = Modifier.height(IntrinsicSize.Min)) {
         Column(
-            modifier = Modifier.fillMaxHeight().padding(end = 8.dp),
+            modifier = Modifier
+                .width(50.dp)
+                .fillMaxHeight()
+                .padding(end = 8.dp, top = 16.dp, bottom = 16.dp), // Match card content vertical padding
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(item.arrivalTime, style = MaterialTheme.typography.bodySmall)
-            Text(item.departureTime, style = MaterialTheme.typography.bodySmall)
+            Text(item.arrivalTime.format(timeFormatter), style = MaterialTheme.typography.bodySmall)
+            // Spacer removed as SpaceBetween handles it
+            Text(item.departureTime.format(timeFormatter), style = MaterialTheme.typography.bodySmall)
         }
         Card(
             modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(item.name, style = MaterialTheme.typography.titleLarge)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = item.stayTime,
-                    modifier = Modifier.clickable { onStayTimeClick() }
-                )
+                Text(item.routePoint.name, style = MaterialTheme.typography.titleLarge)
+
+                if (showDurationEditor) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        TextField(
+                            value = tempDurationText,
+                            onValueChange = { tempDurationText = it },
+                            label = { Text("滞在時間（分）") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            singleLine = true,
+                            textStyle = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                tempDurationText.toIntOrNull()?.let { duration ->
+                                    onStayDurationChanged(duration)
+                                    showDurationEditor = false
+                                }
+                            },
+                            modifier = Modifier.height(48.dp)
+                        ) {
+                            Text("完了")
+                        }
+                    }
+                } else {
+                    Text(
+                        text = "滞在時間: ${item.stayDuration.toMinutes()}分",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.clickable { showDurationEditor = true },
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }
 }
 
-/**
- * 最終到着地点の情報を表示するカードUI。
- * 背景色を変えることで、他の目的地と視覚的に区別する。
- */
 @Composable
-fun EndPointCard(item: TimelineItem.EndPoint) {
+fun FinalDestinationCard(item: TimelineItem.FinalDestination) {
+    val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
     Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-        Column(
-            modifier = Modifier.fillMaxHeight().padding(end = 8.dp),
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier
+                .width(50.dp)
+                .fillMaxHeight(),
+            contentAlignment = Alignment.TopEnd
         ) {
-            Text(item.arrivalTime, style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = item.arrivalTime.format(timeFormatter),
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.End,
+                modifier = Modifier.padding(end = 4.dp, top = 16.dp) // Align with card content padding
+            )
         }
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+            modifier = Modifier.fillMaxWidth().padding(start = 8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("到着", style = MaterialTheme.typography.labelSmall)
-                Text(item.name, style = MaterialTheme.typography.titleLarge)
+                Text(item.routePoint.name, style = MaterialTheme.typography.titleLarge)
+                Text("到着", style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
 }
 
-/**
- * 目的地間の移動情報を表示するUI。
- * 移動手段のアイコンと所要時間を表示する。
- */
+// --- Leg Info ---
+
 @Composable
-fun TravelInfo(item: TimelineItem.Travel) {
+fun LegInfo(leg: RouteLeg) {
+    val durationInMinutes = leg.duration.toMinutes()
+    val distanceInKm = (leg.distanceMeters / 1000.0 * 10).roundToInt() / 10.0
+
     Row(
-        modifier = Modifier.height(64.dp).fillMaxWidth(),
+        modifier = Modifier
+            .height(64.dp)
+            .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Spacer(modifier = Modifier.width(50.dp)) // 時間表示テキストとの位置合わせ用
+        Spacer(modifier = Modifier.width(50.dp))
         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxHeight()) {
             VerticalDivider(modifier = Modifier.fillMaxHeight(), thickness = 2.dp, color = MaterialTheme.colorScheme.primary)
         }
         Spacer(modifier = Modifier.width(16.dp))
-        Icon(item.transportModeIcon, contentDescription = "移動手段", tint = MaterialTheme.colorScheme.primary)
+        Icon(Icons.Default.DirectionsWalk, contentDescription = "移動", tint = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.width(8.dp))
-        Text(item.travelTime)
+        Text("$durationInMinutes 分 ($distanceInKm km)", style = MaterialTheme.typography.bodyMedium)
     }
 }
 
-/**
- * `TimelineScreen`のプレビュー用Composable。
- */
+// --- Time Picker Dialog ---
+
+@Composable
+fun TimePickerDialog(
+    initialTime: LocalDateTime,
+    onTimeSelected: (LocalDateTime) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var selectedHour by remember(initialTime) { mutableIntStateOf(initialTime.hour) }
+    var selectedMinute by remember(initialTime) { mutableIntStateOf(initialTime.minute) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("出発時刻を選択") },
+        text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TimeSpinner(
+                        value = selectedHour,
+                        onValueChange = { selectedHour = it },
+                        range = 0..23,
+                        label = "時"
+                    )
+                    Text(":", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 8.dp))
+                    TimeSpinner(
+                        value = selectedMinute,
+                        onValueChange = { selectedMinute = it },
+                        range = 0..59,
+                        label = "分"
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    // 1. 元の時刻から「日付」の部分だけを取り出す
+                    val datePart = initialTime.toLocalDate()
+
+                    // 2. ユーザーが選んだ時・分を使って、新しいLocalDateTimeを安全に構築する
+                    val newTime = datePart.atTime(selectedHour, selectedMinute)
+
+                    // 3. 構築した新しい時刻をコールバックで渡す
+                    onTimeSelected(newTime)
+                }
+            ) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("キャンセル")
+            }
+        }
+    )
+}
+
+@Composable
+fun TimeSpinner(
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    range: IntRange,
+    label: String
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        IconButton(onClick = { onValueChange((value + 1).coerceIn(range)) }) {
+            Icon(Icons.Default.KeyboardArrowUp, contentDescription = "増加")
+        }
+        Text(
+            text = value.toString().padStart(2, '0'),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.width(50.dp),
+            textAlign = TextAlign.Center
+        )
+        IconButton(onClick = { onValueChange((value - 1).coerceIn(range)) }) {
+            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "減少")
+        }
+        Text(label, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun TripTimelineScreenPreview() {
-    TripTimelineScreen(onNavigateToMap = {}, onNavigateBack = {})
+    val dummyPoint1 = RoutePoint(RoutePointId("1"), "東京駅", 35.68, 139.76, 0, LocalDateTime.now(), LocalDateTime.now())
+    val dummyPoint2 = RoutePoint(RoutePointId("2"), "ホテル", 35.685, 139.77, 120, LocalDateTime.now(), LocalDateTime.now())
+
+    val dummyRoute = Route(
+        stops = listOf(
+            TimelineItem.Origin(dummyPoint1, LocalDateTime.now().plusHours(1)),
+            TimelineItem.FinalDestination(dummyPoint2, LocalDateTime.now().plusHours(1).plusMinutes(15))
+        ),
+        legs = listOf(
+            RouteLeg(
+                from = dummyPoint1,
+                to = dummyPoint2,
+                duration = Duration.ofMinutes(15),
+                distanceMeters = 1200,
+                polyline = "",
+                steps = emptyList()
+            )
+        )
+    )
+
+    TripTimelineContent(
+        route = dummyRoute,
+        isLoading = false,
+        onNavigateToMap = {},
+        onNavigateBack = {},
+        onDailyStartTimeChanged = {},
+        onStayDurationChanged = { _, _ -> }
+    )
 }
