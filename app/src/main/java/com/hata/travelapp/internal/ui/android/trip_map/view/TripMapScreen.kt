@@ -1,7 +1,11 @@
 package com.hata.travelapp.internal.ui.android.trip_map.view
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
@@ -9,19 +13,26 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import com.hata.travelapp.R
 
 /**
  * Googleマップを表示し、目的地の検索やタイムラインへの遷移を行う画面。
@@ -59,19 +70,43 @@ fun TripMapScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onNavigateToTimeline) {
+            FloatingActionButton(
+                onClick = onNavigateToTimeline,
+                shape = MaterialTheme.shapes.large // 葉っぱ型を適用
+            ) {
                 Icon(Icons.AutoMirrored.Filled.List, contentDescription = "タイムラインへ")
             }
         }
     ) { innerPadding ->
-        GoogleMap(
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
-            cameraPositionState = cameraPositionState
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
         ) {
-            Marker(
-                state = singaporeMarkerState,
-                title = "Tokyo",
-                snippet = "Marker in Tokyo"
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState,
+                // FABとマップのUIコントロール（ズームボタン等）が被らないように下部にパディングを追加
+                contentPadding = PaddingValues(bottom = 80.dp)
+            ) {
+                Marker(
+//                state = MarkerState(position = tokyo),
+                    title = "Tokyo",
+                    snippet = "Marker in Tokyo"
+                )
+            }
+
+            // 左下のキャラクター画像 (Char2)
+            Image(
+                painter = painterResource(id = R.drawable.char2),
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp)
+                    .padding(bottom = 80.dp) // FABと重ならないように少し上に配置
+                    .size(200.dp) // 150.dp -> 200.dp
+                    .clip(MaterialTheme.shapes.medium)
+                    .alpha(0.9f)
             )
         }
     }

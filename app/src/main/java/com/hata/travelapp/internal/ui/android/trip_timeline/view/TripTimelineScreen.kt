@@ -1,10 +1,12 @@
 package com.hata.travelapp.internal.ui.android.trip_timeline.view
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -47,10 +50,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.hata.travelapp.R
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hata.travelapp.internal.domain.trip.entity.Route
@@ -112,7 +119,10 @@ private fun TripTimelineContent(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onNavigateToMap) {
+            FloatingActionButton(
+                onClick = onNavigateToMap,
+                shape = MaterialTheme.shapes.large // 葉っぱ型を適用
+            ) {
                 Icon(Icons.Default.Map, contentDescription = "マップへ")
             }
         }
@@ -122,33 +132,48 @@ private fun TripTimelineContent(
                 CircularProgressIndicator()
             }
         } else if (route != null) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = 16.dp),
-            ) {
-                itemsIndexed(route.stops) { index, item ->
-                    when (item) {
-                        is TimelineItem.Origin -> OriginCard(
-                            item = item,
-                            onDepartureTimeChanged = { newTime ->
-                                onDailyStartTimeChanged(newTime)
-                            }
-                        )
-                        is TimelineItem.Waypoint -> WaypointCard(
-                            item = item,
-                            onStayDurationChanged = { duration ->
-                                onStayDurationChanged(item.routePoint.id, duration)
-                            }
-                        )
-                        is TimelineItem.FinalDestination -> FinalDestinationCard(item)
-                    }
-
-                    route.legs.getOrNull(index)?.let {
-                        LegInfo(it)
+            Box(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(bottom = 80.dp) // FABと被らないように余白を追加
+                ) {
+                    itemsIndexed(route.stops) { index, item ->
+                        when (item) {
+                            is TimelineItem.Origin -> OriginCard(
+                                item = item,
+                                onDepartureTimeChanged = { newTime ->
+                                    onDailyStartTimeChanged(newTime)
+                                }
+                            )
+                            is TimelineItem.Waypoint -> WaypointCard(
+                                item = item,
+                                onStayDurationChanged = { duration ->
+                                    onStayDurationChanged(item.routePoint.id, duration)
+                                }
+                            )
+                            is TimelineItem.FinalDestination -> FinalDestinationCard(item)
+                        }
+                        route.legs.getOrNull(index)?.let {
+                            LegInfo(it)
+                        }
                     }
                 }
+
+                // 左下のキャラクター画像 (Char2)
+                Image(
+                    painter = painterResource(id = R.drawable.char2),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(16.dp)
+                        .padding(bottom = 80.dp) // FABと重ならないように少し上に配置
+                        .size(200.dp) // 150.dp -> 200.dp
+                        .clip(MaterialTheme.shapes.medium)
+                        .alpha(0.9f)
+                )
             }
         } else {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

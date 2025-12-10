@@ -1,5 +1,6 @@
 package com.hata.travelapp.internal.ui.android.home.view
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -31,8 +33,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.hata.travelapp.R
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hata.travelapp.internal.domain.trip.entity.Trip
@@ -76,32 +82,56 @@ private fun HomeScreenContent(
 ) {
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = onNavigateToNewProject) {
+            FloatingActionButton(
+                onClick = onNavigateToNewProject,
+                shape = MaterialTheme.shapes.large // 葉っぱ型を適用
+            ) {
                 Icon(Icons.Default.Add, contentDescription = "新規作成")
             }
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text("作成済みプロジェクト", style = MaterialTheme.typography.titleLarge)
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                items(projects) { project ->
-                    ProjectCard(project, onProjectClick, onEditProject, onDeleteProject)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "作成済みプロジェクト",
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(projects) { project ->
+                        ProjectCard(project, onProjectClick, onEditProject, onDeleteProject)
+                    }
                 }
             }
+
+            // 左下のキャラクター画像
+            // FABと重ならないように、FABとは逆側（左下）に配置
+            Image(
+                painter = painterResource(id = R.drawable.char1),
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp)
+                    .size(240.dp) // さらに大きく 180.dp -> 240.dp
+                    .clip(MaterialTheme.shapes.medium)
+            )
         }
     }
 }
@@ -140,14 +170,27 @@ private fun ProjectCard(
                     onDismissRequest = { menuExpanded = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("編集") },
+                        text = {
+                            Text(
+                                text = "編集",
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
+                        },
                         onClick = {
                             onEditProject(project.id.value)
                             menuExpanded = false
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("削除") },
+                        text = {
+                            Text(
+                                text = "削除",
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        },
                         onClick = {
                             onDeleteProject(project.id.value)
                             menuExpanded = false

@@ -97,28 +97,28 @@ fun ApplicationNavigationHost(
             )
         ) { backstackEntry ->
             val tripId = backstackEntry.arguments?.getString("tripId") ?: return@composable
-            val dateStr = backstackEntry.arguments?.getString("date") ?: return@composable
+            val date = backstackEntry.arguments?.getString("date") ?: return@composable
 
             TripTimelineScreen(
                 onNavigateBack = { navController.navigate("trips/${tripId}/date-selection") },
-                onNavigateToMap = { navController.navigate("trips/${tripId}/map") },
+                onNavigateToMap = { navController.navigate("trips/${tripId}/map?date=${date}") },
                 tripId = TripId(tripId),
-                date = LocalDate.parse(dateStr),
-//                onNavigateToMap = {
-//                    navController.navigate("trip/$tripId/map/$dateStr")
-//                }
+                date = LocalDate.parse(date),
             )
         }
         composable(
-            route = "trips/{tripId}/map",
+            route = "trips/{tripId}/map?date={date}",
             arguments = listOf(
                 navArgument("tripId") { type = NavType.StringType },
+                navArgument("date") { type = NavType.StringType }
             )
         ) { backstackEntry ->
             val tripId = backstackEntry.arguments?.getString("tripId")
+            val date = backstackEntry.arguments?.getString("date") ?: return@composable
+
             TripMapScreen(
                 onNavigateBack = { navController.navigate("trips/${tripId}/date-selection") },
-                onNavigateToTimeline = { navController.navigate("trips/${tripId}/timeline") }
+                onNavigateToTimeline = { navController.navigate("trips/${tripId}/timeline?date=${date}") }
             )
         }
     }
