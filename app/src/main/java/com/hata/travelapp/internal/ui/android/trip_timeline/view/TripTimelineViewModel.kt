@@ -27,29 +27,22 @@ import javax.inject.Inject
 @HiltViewModel
 class TripTimelineViewModel @Inject constructor(
     private val generateTimelineUseCase: GenerateTimelineUseCase,
-    private val recalculateTimelineUseCase: RecalculateTimelineUseCase, // TimelineGeneratorの代わりにUseCaseを注入
+    private val recalculateTimelineUseCase: RecalculateTimelineUseCase,
     private val tripUsecase: TripUsecase,
     private val updateDailyStartTimeUseCase: UpdateDailyStartTimeUseCase,
     private val updateStayDurationUseCase: UpdateStayDurationUseCase
 ) : ViewModel() {
 
-    // UIに公開する、計算済みルートの状態
     private val _route = MutableStateFlow<Route?>(null)
     val route: StateFlow<Route?> = _route.asStateFlow()
 
-    // UIに公開する、ローディング状態
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    // APIから取得した移動区間情報をキャッシュする
     private var cachedLegs: List<RouteLeg> = emptyList()
     private var currentTripId: TripId? = null
     private var currentDate: LocalDate? = null
 
-    /**
-     * 指定されたTripIdと日付に基づいて、タイムラインの初期表示に必要なすべての情報を読み込む。
-     * API通信（RouteLegの取得）はこのメソッドでのみ行われる。
-     */
     fun loadTimeline(tripId: TripId, date: LocalDate) {
         if (currentTripId == tripId && currentDate == date && _route.value != null) {
             return
@@ -66,9 +59,6 @@ class TripTimelineViewModel @Inject constructor(
         }
     }
 
-    /**
-     * UIからの操作に応じて、その日の出発時刻を更新し、タイムラインを再計算する。
-     */
     fun onDailyStartTimeChanged(newStartTime: LocalDateTime) {
         val tripId = currentTripId ?: return
         val date = currentDate ?: return
@@ -79,9 +69,6 @@ class TripTimelineViewModel @Inject constructor(
         }
     }
 
-    /**
-     * UIからの操作に応じて、特定の立ち寄り先の滞在時間を更新し、タイムラインを再計算する。
-     */
     fun onStayDurationChanged(routePointId: RoutePointId, newDurationInMinutes: Int) {
         val tripId = currentTripId ?: return
 
@@ -91,9 +78,6 @@ class TripTimelineViewModel @Inject constructor(
         }
     }
 
-    /**
-     * キャッシュ済みのデータを使って、API通信なしで高速にタイムラインを再計算する。
-     */
     private suspend fun recalculateTimeline() {
         val tripId = currentTripId ?: return
         val date = currentDate ?: return
@@ -101,7 +85,6 @@ class TripTimelineViewModel @Inject constructor(
         val updatedTrip = tripUsecase.getById(tripId) ?: return
         val dailyPlan = updatedTrip.dailyPlans.find { it.dailyStartTime.toLocalDate() == date } ?: return
 
-        // 純粋な再計算Usecaseを呼び出す
         val recalculatedRoute = recalculateTimelineUseCase.execute(
             routePoints = dailyPlan.routePoints,
             legs = cachedLegs,

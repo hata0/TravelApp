@@ -34,7 +34,7 @@ class FakeTripRepository : TripRepository {
                                 id = RoutePointId("1"),
                                 name = "札幌",
                                 latitude = 43.06,
-                                longitude = 135.35,
+                                longitude = 141.35,
                                 stayDurationInMinutes = 60,
                                 createdAt = LocalDateTime.now(),
                                 updatedAt = LocalDateTime.now()

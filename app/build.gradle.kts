@@ -21,6 +21,8 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        // Explicitly define the test application ID to avoid process conflicts.
+        testApplicationId = "com.hata.travelapp.test"
         testInstrumentationRunner = "com.hata.travelapp.HiltTestRunner"
 
         val localProperties = Properties().apply {
@@ -42,6 +44,15 @@ android {
             )
         }
     }
+
+    packagingOptions {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/LICENSE.md"
+            excludes += "/META-INF/LICENSE-notice.md"
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -111,16 +122,19 @@ dependencies {
     kspDebug(libs.showkase.processor)
 
     // --- Test Dependencies ---
-    testImplementation(libs.junit)
-    testImplementation(libs.mockk.android)
-    testImplementation(libs.turbine)
+    debugImplementation(libs.junit)
+    debugImplementation(libs.mockk) // Core mockk library
+    debugImplementation(libs.turbine)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockwebserver)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    androidTestImplementation(libs.androidx.navigation.testing)
-    androidTestImplementation(libs.hilt.android.testing)
-    kspAndroidTest(libs.hilt.compiler) // Add this line for Hilt testing
+
+    // --- AndroidTest Dependencies ---
+    debugImplementation(libs.androidx.junit)
+    debugImplementation(libs.androidx.espresso.core)
+    debugImplementation(platform(libs.androidx.compose.bom))
+    debugImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.navigation.testing)
+    debugImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.compiler)
+    debugImplementation(libs.mockk) // Add mockk for instrumentation tests
 }

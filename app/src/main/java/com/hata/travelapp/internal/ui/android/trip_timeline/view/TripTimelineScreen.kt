@@ -172,18 +172,22 @@ fun OriginCard(
         Box(
             modifier = Modifier
                 .width(50.dp)
+                .fillMaxHeight()
                 .clickable { showTimePicker = true },
-            contentAlignment = Alignment.CenterEnd
+            contentAlignment = Alignment.BottomEnd
         ) {
             Text(
                 text = item.departureTime.format(timeFormatter),
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.End,
-                modifier = Modifier.padding(end = 4.dp),
+                modifier = Modifier.padding(end = 4.dp, bottom = 16.dp), // Align with card content padding
                 color = MaterialTheme.colorScheme.primary
             )
         }
-        Card(modifier = Modifier.fillMaxWidth().padding(start = 8.dp)) {
+        Card(
+            modifier = Modifier.fillMaxWidth().padding(start = 8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+        ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(item.routePoint.name, style = MaterialTheme.typography.titleLarge)
                 Text("出発", style = MaterialTheme.typography.bodyMedium)
@@ -218,20 +222,19 @@ fun WaypointCard(
         Column(
             modifier = Modifier
                 .width(50.dp)
-                .padding(end = 8.dp),
-            horizontalAlignment = Alignment.End
+                .fillMaxHeight()
+                .padding(end = 8.dp, top = 16.dp, bottom = 16.dp), // Match card content vertical padding
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             Text(item.arrivalTime.format(timeFormatter), style = MaterialTheme.typography.bodySmall)
-            Spacer(modifier = Modifier.height(8.dp))
+            // Spacer removed as SpaceBetween handles it
             Text(item.departureTime.format(timeFormatter), style = MaterialTheme.typography.bodySmall)
         }
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor = if (showDurationEditor)
-                    MaterialTheme.colorScheme.surfaceVariant
-                else
-                    MaterialTheme.colorScheme.surface
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
             )
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -285,13 +288,23 @@ fun WaypointCard(
 fun FinalDestinationCard(item: TimelineItem.FinalDestination) {
     val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
     Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-        Text(
-            text = item.arrivalTime.format(timeFormatter),
-            style = MaterialTheme.typography.bodySmall,
-            textAlign = TextAlign.End,
-            modifier = Modifier.width(50.dp)
-        )
-        Card(modifier = Modifier.fillMaxWidth().padding(start = 8.dp)) {
+        Box(
+            modifier = Modifier
+                .width(50.dp)
+                .fillMaxHeight(),
+            contentAlignment = Alignment.TopEnd
+        ) {
+            Text(
+                text = item.arrivalTime.format(timeFormatter),
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.End,
+                modifier = Modifier.padding(end = 4.dp, top = 16.dp) // Align with card content padding
+            )
+        }
+        Card(
+            modifier = Modifier.fillMaxWidth().padding(start = 8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+        ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(item.routePoint.name, style = MaterialTheme.typography.titleLarge)
                 Text("到着", style = MaterialTheme.typography.bodyMedium)
@@ -332,8 +345,8 @@ fun TimePickerDialog(
     onTimeSelected: (LocalDateTime) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var selectedHour by remember { mutableIntStateOf(initialTime.hour) }
-    var selectedMinute by remember { mutableIntStateOf(initialTime.minute) }
+    var selectedHour by remember(initialTime) { mutableIntStateOf(initialTime.hour) }
+    var selectedMinute by remember(initialTime) { mutableIntStateOf(initialTime.minute) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -364,7 +377,13 @@ fun TimePickerDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    val newTime = initialTime.withHour(selectedHour).withMinute(selectedMinute)
+                    // 1. 元の時刻から「日付」の部分だけを取り出す
+                    val datePart = initialTime.toLocalDate()
+
+                    // 2. ユーザーが選んだ時・分を使って、新しいLocalDateTimeを安全に構築する
+                    val newTime = datePart.atTime(selectedHour, selectedMinute)
+
+                    // 3. 構築した新しい時刻をコールバックで渡す
                     onTimeSelected(newTime)
                 }
             ) {

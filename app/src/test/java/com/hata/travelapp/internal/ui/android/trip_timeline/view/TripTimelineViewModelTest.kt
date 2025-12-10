@@ -2,6 +2,9 @@ package com.hata.travelapp.internal.ui.android.trip_timeline.view
 
 import com.hata.travelapp.internal.domain.trip.entity.DailyPlan
 import com.hata.travelapp.internal.domain.trip.entity.Route
+import com.hata.travelapp.internal.domain.trip.entity.RouteLeg
+import com.hata.travelapp.internal.domain.trip.entity.RoutePoint
+import com.hata.travelapp.internal.domain.trip.entity.RoutePointId
 import com.hata.travelapp.internal.domain.trip.entity.Trip
 import com.hata.travelapp.internal.domain.trip.entity.TripId
 import com.hata.travelapp.internal.usecase.trip.GenerateTimelineUseCase
@@ -24,7 +27,9 @@ import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.time.Duration
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @ExperimentalCoroutinesApi
 class TripTimelineViewModelTest {
@@ -34,11 +39,12 @@ class TripTimelineViewModelTest {
 
     private lateinit var viewModel: TripTimelineViewModel
 
-    private val generateTimelineUseCase: GenerateTimelineUseCase = mockk()
-    private val recalculateTimelineUseCase: RecalculateTimelineUseCase = mockk()
-    private val tripUsecase: TripUsecase = mockk()
-    private val updateDailyStartTimeUseCase: UpdateDailyStartTimeUseCase = mockk()
-    private val updateStayDurationUseCase: UpdateStayDurationUseCase = mockk()
+    // Mocks
+    private val generateTimelineUseCase: GenerateTimelineUseCase = mockk(relaxed = true)
+    private val recalculateTimelineUseCase: RecalculateTimelineUseCase = mockk(relaxed = true)
+    private val tripUsecase: TripUsecase = mockk(relaxed = true)
+    private val updateDailyStartTimeUseCase: UpdateDailyStartTimeUseCase = mockk(relaxed = true)
+    private val updateStayDurationUseCase: UpdateStayDurationUseCase = mockk(relaxed = true)
 
     @Before
     fun setUp() {
@@ -77,38 +83,52 @@ class TripTimelineViewModelTest {
     }
 
     @Test
-    fun `onDailyStartTimeChanged - calls update and recalculate usecases`() = runTest {
+    fun `onDailyStartTimeChanged - calls use cases and updates state`() = runTest {
+        // Arrange
         val tripId = TripId("trip1")
         val date = LocalDate.now()
-        val newStartTime = date.atTime(10, 0)
-        val mockInitialRoute: Route = mockk(relaxed = true)
+        val newStartTime = date.atTime(10, 30)
         val mockRecalculatedRoute: Route = mockk()
 
-        // Arrange: Mock the trip and daily plan data
-        val dailyPlan = DailyPlan(date.atTime(9, 0), emptyList())
-        val mockTrip = mockk<Trip> {
-            every { dailyPlans } returns listOf(dailyPlan)
-        }
+        // 1. Define concrete data for clarity
+        val dummyRoutePoint = RoutePoint(RoutePointId("p1"), "Point 1", 0.0, 0.0, 0, LocalDateTime.now(), LocalDateTime.now())
+        val dummyLeg = RouteLeg(dummyRoutePoint, dummyRoutePoint, Duration.ZERO, 0, "", emptyList())
+        val initialRoute = Route(emptyList(), listOf(dummyLeg))
 
-        // First, load initial data to set the viewModel's internal state
-        coEvery { generateTimelineUseCase.execute(tripId, date) } returns mockInitialRoute
-        viewModel.loadTimeline(tripId, date)
-        advanceUntilIdle() // Ensure initial loading is complete
+        // 2. Define updated state of the Trip
+        val updatedDailyPlan = DailyPlan(newStartTime, listOf(dummyRoutePoint))
+        val updatedTrip = Trip(tripId, "Updated", LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now(), listOf(updatedDailyPlan))
 
-        // Setup mocks for the update flow
+        // 3. Setup mocks
+        coEvery { generateTimelineUseCase.execute(tripId, date) } returns initialRoute
+        coEvery { tripUsecase.getById(tripId) } returns updatedTrip // recalculateTimeline will get the updated trip
         coEvery { updateDailyStartTimeUseCase.execute(tripId, date, newStartTime) } returns Unit
-        coEvery { tripUsecase.getById(tripId) } returns mockTrip
-        every { recalculateTimelineUseCase.execute(any(), any(), any()) } returns mockRecalculatedRoute
+        every {
+            recalculateTimelineUseCase.execute(
+                routePoints = updatedDailyPlan.routePoints,
+                legs = listOf(dummyLeg), // Use legs from the initially cached route
+                startTime = newStartTime
+            )
+        } returns mockRecalculatedRoute
+
+        // 4. Set initial state for the ViewModel
+        viewModel.loadTimeline(tripId, date)
+        advanceUntilIdle()
 
         // Act
         viewModel.onDailyStartTimeChanged(newStartTime)
-        advanceUntilIdle() // Ensure the launched coroutine completes
+        advanceUntilIdle()
 
         // Assert
         coVerify(exactly = 1) { updateDailyStartTimeUseCase.execute(tripId, date, newStartTime) }
         coVerify(exactly = 1) { tripUsecase.getById(tripId) }
-        verify(exactly = 1) { recalculateTimelineUseCase.execute(any(), any(), any()) }
-
+        verify(exactly = 1) {
+            recalculateTimelineUseCase.execute(
+                routePoints = updatedDailyPlan.routePoints,
+                legs = listOf(dummyLeg),
+                startTime = newStartTime
+            )
+        }
         assertEquals(mockRecalculatedRoute, viewModel.route.value)
     }
 }

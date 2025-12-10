@@ -41,8 +41,15 @@ class TimelineGeneratorImpl : TimelineGenerator {
 
         routePoints.forEachIndexed { index, routePoint ->
             val arrivalTime = currentTime
-            val stayDuration = Duration.ofMinutes(routePoint.stayDurationInMinutes.toLong())
-            val departureTime = arrivalTime.plus(stayDuration)
+            
+            // For the first point (Origin), departure time is exactly the start time.
+            // Stay duration is not added to the departure time for the origin.
+            val departureTime = if (index == 0) {
+                arrivalTime
+            } else {
+                val stayDuration = Duration.ofMinutes(routePoint.stayDurationInMinutes.toLong())
+                arrivalTime.plus(stayDuration)
+            }
 
             // indexの位置に応じて、生成するTimelineItemを切り替える
             when (index) {

@@ -61,16 +61,16 @@ fun ApplicationNavigationHost(
         composable("home") {
             HomeScreen(
                 onNavigateToNewProject = { navController.navigate("trips/new") },
-                onProjectClick = { navController.navigate("trips/abc123/date-selection") },
                 onEditProject = { },
-                onDeleteProject = { /* TODO: ViewModelと連携して削除処理を実装 */ }
+                onDeleteProject = { /* TODO: ViewModelと連携して削除処理を実装 */ },
+                onProjectClick = { projectId -> navController.navigate("trips/$projectId/date-selection") },
             )
         }
         composable("trips/new") {
             TripsNewScreen(
                 onNavigateToTrip = { tripId ->
                     // 新規作成後は、その旅行の日程選択画面に遷移する
-                    navController.navigate("trip/${tripId}/timeline")
+                    navController.navigate("trips/${tripId}/date-selection")
                 },
                 onNavigateBack = { navController.navigate("home") }
             )
@@ -80,19 +80,17 @@ fun ApplicationNavigationHost(
             arguments = listOf(
                 navArgument("tripId") { type = NavType.StringType },
             )
-        ) { backstackEntry ->
-            val tripId: String? = backstackEntry.arguments?.getString("tripId")
+        ) {
             TripsDateSelectionScreen(
-                tripId = TripId(tripId!!),
                 // 日付を選択したら、tripIdとdateを渡してタイムライン画面に遷移
-                onDateSelect = { date ->
-                    navController.navigate("trip/$tripId/timeline?date=${date}")
+                onDateSelect = { tripId, date ->
+                    navController.navigate("trips/${tripId}/timeline?date=${date}")
                 },
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.navigate("home") }
             )
         }
         composable(
-            route = "trip/{tripId}/timeline?date={date}",
+            route = "trips/{tripId}/timeline?date={date}",
             arguments = listOf(
                 navArgument("tripId") { type = NavType.StringType },
                 navArgument("date") { type = NavType.StringType }
@@ -106,6 +104,9 @@ fun ApplicationNavigationHost(
                 onNavigateToMap = { navController.navigate("trips/${tripId}/map") },
                 tripId = TripId(tripId),
                 date = LocalDate.parse(dateStr),
+//                onNavigateToMap = {
+//                    navController.navigate("trip/$tripId/map/$dateStr")
+//                }
             )
         }
         composable(

@@ -17,7 +17,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -26,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hata.travelapp.internal.domain.trip.entity.DailyPlan
-import com.hata.travelapp.internal.domain.trip.entity.TripId
 import com.hata.travelapp.internal.ui.android.trip.view.DateSelectionViewModel
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -38,20 +36,16 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun TripsDateSelectionScreen(
     viewModel: DateSelectionViewModel = hiltViewModel(),
-    tripId: TripId,
-    onDateSelect: (LocalDate) -> Unit,
+    onDateSelect: (String, LocalDate) -> Unit,
     onNavigateBack: () -> Unit
 ) {
+    val tripTitle by viewModel.tripTitle.collectAsStateWithLifecycle()
     val dailyPlans by viewModel.dailyPlans.collectAsStateWithLifecycle()
 
-    // tripIdが変更されたときに、ViewModelにデータの読み込みを指示する
-    LaunchedEffect(tripId) {
-        viewModel.loadDailyPlans(tripId)
-    }
-
     DateSelectionScreenContent(
+        tripTitle = tripTitle,
         dailyPlans = dailyPlans,
-        onDateSelect = onDateSelect,
+        onDateSelect = { date -> onDateSelect(viewModel.tripId, date) },
         onNavigateBack = onNavigateBack
     )
 }
@@ -62,6 +56,7 @@ fun TripsDateSelectionScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DateSelectionScreenContent(
+    tripTitle: String,
     dailyPlans: List<DailyPlan>,
     onDateSelect: (LocalDate) -> Unit,
     onNavigateBack: () -> Unit
@@ -71,7 +66,7 @@ private fun DateSelectionScreenContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("日程を選択") },
+                title = { Text(tripTitle) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
@@ -120,6 +115,7 @@ fun DateSelectionScreenPreview() {
         )
     )
     DateSelectionScreenContent(
+        tripTitle = "北海道旅行",
         dailyPlans = dummyPlans,
         onDateSelect = {},
         onNavigateBack = {}

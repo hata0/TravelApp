@@ -2,12 +2,13 @@ package com.hata.travelapp.internal.di
 
 import android.content.Context
 import androidx.room.Room
+import com.hata.travelapp.internal.data.repository.FakeTripRepository
 import com.hata.travelapp.internal.data.source.local.AppDatabase
 import com.hata.travelapp.internal.data.source.local.dao.RouteLegDao
 import com.hata.travelapp.internal.data.source.local.dao.TripDao
 import com.hata.travelapp.internal.data.source.remote.RoutesApiService
 import com.hata.travelapp.internal.data.repository.GoogleRoutesRepositoryImpl
-import com.hata.travelapp.internal.data.repository.RoomTripRepository
+import com.hata.travelapp.internal.data.repository.FakeRoutesRepository
 import com.hata.travelapp.internal.domain.trip.repository.RoutesRepository
 import com.hata.travelapp.internal.domain.trip.service.TimelineGenerator
 import com.hata.travelapp.internal.domain.trip.service.TimelineGeneratorImpl
@@ -90,18 +91,11 @@ object AppModule {
     // region Repositories
     @Provides
     @Singleton
-    fun provideTripRepository(tripDao: TripDao): TripRepository = RoomTripRepository(tripDao)
+    fun provideTripRepository(): TripRepository = FakeTripRepository() // Swapped to FakeTripRepository
 
     @Provides
     @Singleton
-    fun provideRoutesRepository(
-        apiService: RoutesApiService,
-        routeLegDao: RouteLegDao
-    ): RoutesRepository = GoogleRoutesRepositoryImpl(
-        apiService = apiService,
-        routeLegDao = routeLegDao,
-        apiKey = "" // TODO: APIキーをBuildConfigから取得する
-    )
+    fun provideRoutesRepository(): RoutesRepository = FakeRoutesRepository()
     // endregion
 
     // region Domain Services
@@ -146,5 +140,4 @@ object AppModule {
     fun provideUpdateStayDurationUseCase(
         tripRepository: TripRepository
     ): UpdateStayDurationUseCase = UpdateStayDurationUseCaseImpl(tripRepository)
-    // endregion
 }
