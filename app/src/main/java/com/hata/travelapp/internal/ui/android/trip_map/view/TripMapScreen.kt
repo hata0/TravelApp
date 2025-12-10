@@ -93,6 +93,7 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberMarkerState
 import com.hata.travelapp.internal.domain.model.TripId
 import com.hata.travelapp.internal.ui.android.trip_map.viewmodel.TripMapViewModel
 import java.time.LocalDate
@@ -105,6 +106,7 @@ import java.time.LocalDate
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+fun TripMapScreen(
 fun MapScreen(
     viewModel: TripMapViewModel = hiltViewModel(),
     tripId: TripId,
@@ -116,8 +118,11 @@ fun MapScreen(
     val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
     val selectedLocation by viewModel.selectedLocation.collectAsStateWithLifecycle()
     val cameraPosition by viewModel.cameraPosition.collectAsStateWithLifecycle()
-    
+
+    val singapore = LatLng(1.35, 103.87)
+    val singaporeMarkerState = rememberMarkerState(position = singapore)
     val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(singapore, 10f)
         // Default to Tokyo if no position set
         position = CameraPosition.fromLatLngZoom(LatLng(35.681236, 139.767125), 10f)
     }
@@ -127,7 +132,7 @@ fun MapScreen(
             cameraPositionState.position = it
         }
     }
-    
+
     val route by viewModel.route.collectAsStateWithLifecycle()
 
     LaunchedEffect(tripId, date) {
@@ -184,6 +189,15 @@ fun MapScreen(
             }
         }
     ) { innerPadding ->
+        GoogleMap(
+            modifier = Modifier.fillMaxSize().padding(innerPadding),
+            cameraPositionState = cameraPositionState
+        ) {
+            Marker(
+                state = singaporeMarkerState,
+                title = "Tokyo",
+                snippet = "Marker in Tokyo"
+            )
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
@@ -214,7 +228,7 @@ fun MapScreen(
                                     LatLng(end.routePoint.latitude, end.routePoint.longitude)
                                 )
                             }
-                            
+
                             com.google.maps.android.compose.Polyline(
                                 points = points,
                                 color = androidx.compose.ui.graphics.Color.Blue,
@@ -233,7 +247,7 @@ fun MapScreen(
                     )
                 }
             }
-            
+
             // Add Location Confirmation Dialog/BottomSheet
 
             selectedLocation?.let { location ->
@@ -272,6 +286,8 @@ fun MapScreen(
  */
 @Preview(showBackground = true)
 @Composable
+fun TripMapScreenPreview() {
+    TripMapScreen(onNavigateToTimeline = {}, onNavigateBack = {})
 fun MapScreenPreview() {
     // Preview needs modification if arguments are required, bypassing for now with dummy
     // MapScreen(tripId = TripId("1"), date = LocalDate.now(), onNavigateToTimeline = {}, onNavigateBack = {})

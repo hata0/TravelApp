@@ -23,8 +23,6 @@ import com.hata.travelapp.internal.usecase.trip.UpdateDailyStartTimeUseCase
 import com.hata.travelapp.internal.usecase.trip.UpdateDailyStartTimeUseCaseImpl
 import com.hata.travelapp.internal.usecase.trip.UpdateStayDurationUseCase
 import com.hata.travelapp.internal.usecase.trip.UpdateStayDurationUseCaseImpl
-import com.hata.travelapp.internal.usecase.trip.AddRoutePointUseCase
-import com.hata.travelapp.internal.usecase.trip.AddRoutePointUseCaseImpl
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -142,11 +140,4 @@ object AppModule {
     fun provideUpdateStayDurationUseCase(
         tripRepository: TripRepository
     ): UpdateStayDurationUseCase = UpdateStayDurationUseCaseImpl(tripRepository)
-
-    @Provides
-    @Singleton
-    fun provideAddRoutePointUseCase(
-        tripRepository: TripRepository
-    ): AddRoutePointUseCase = AddRoutePointUseCaseImpl(tripRepository)
-    // endregion
 }

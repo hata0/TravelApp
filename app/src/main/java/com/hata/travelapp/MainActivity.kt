@@ -17,8 +17,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.hata.travelapp.internal.domain.trip.entity.TripId
 import com.hata.travelapp.internal.ui.android.home.view.HomeScreen
-import com.hata.travelapp.internal.ui.android.trip.view.DateSelectionScreen
 import com.hata.travelapp.internal.ui.android.trip_timeline.view.TripTimelineScreen
+import com.hata.travelapp.internal.ui.android.trips_date_selection.view.TripsDateSelectionScreen
 import com.hata.travelapp.internal.ui.android.trips_new.view.TripsNewScreen
 import com.hata.travelapp.ui.theme.TravelAppTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -55,73 +55,71 @@ fun ApplicationNavigationHost(
     navController: NavHostController,
     modifier: Modifier
 ) {
-    NavHost(
-        navController = navController, startDestination = "home",
-        modifier = modifier
-    ) {
+    NavHost(navController = navController, startDestination = "home",
+        modifier = modifier) {
         composable("home") {
             HomeScreen(
                 onNavigateToNewProject = { navController.navigate("trips/new") },
-                onProjectClick = { projectId -> navController.navigate("trip/$projectId/dates") },
-                onEditProject = { projectId -> navController.navigate("trips/new?projectId=$projectId") },
-                onDeleteProject = { /* TODO: Implement delete logic */ }
+                onEditProject = { },
+                onDeleteProject = { /* TODO: ViewModelと連携して削除処理を実装 */ },
+                onProjectClick = { projectId -> navController.navigate("trips/$projectId/date-selection") },
             )
         }
         composable("trips/new") {
             TripsNewScreen(
                 onNavigateToTrip = { tripId ->
                     // 新規作成後は、その旅行の日程選択画面に遷移する
-                    navController.navigate("trip/$tripId/dates") {
-                        popUpTo("home")
-                    }
+                    navController.navigate("trips/${tripId}/date-selection")
                 },
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.navigate("home") }
             )
         }
         composable(
-            route = "trip/{tripId}/dates",
+            route = "trips/{tripId}/date-selection",
             arguments = listOf(
-                navArgument("tripId") { type = NavType.StringType }
+                navArgument("tripId") { type = NavType.StringType },
             )
-        ) { backStackEntry ->
-            val tripId = backStackEntry.arguments?.getString("tripId") ?: return@composable
-            DateSelectionScreen(
+        ) {
+            TripsDateSelectionScreen(
                 // 日付を選択したら、tripIdとdateを渡してタイムライン画面に遷移
-                onDateSelect = { selectedTripId, date ->
-                    navController.navigate("trip/$selectedTripId/timeline/$date")
+                onDateSelect = { tripId, date ->
+                    navController.navigate("trips/${tripId}/timeline?date=${date}")
                 },
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.navigate("home") }
             )
         }
         composable(
-            route = "trip/{tripId}/timeline/{date}",
+            route = "trips/{tripId}/timeline?date={date}",
             arguments = listOf(
                 navArgument("tripId") { type = NavType.StringType },
                 navArgument("date") { type = NavType.StringType }
             )
-        ) { backStackEntry ->
-            val tripId = backStackEntry.arguments?.getString("tripId") ?: return@composable
-            val dateStr = backStackEntry.arguments?.getString("date") ?: return@composable
+        ) { backstackEntry ->
+            val tripId = backstackEntry.arguments?.getString("tripId") ?: return@composable
+            val dateStr = backstackEntry.arguments?.getString("date") ?: return@composable
 
             TripTimelineScreen(
+                onNavigateBack = { navController.navigate("trips/${tripId}/date-selection") },
+                onNavigateToMap = {},
+//                onNavigateToMap = { navController.navigate("trips/${tripId}/map") },
                 tripId = TripId(tripId),
                 date = LocalDate.parse(dateStr),
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToMap = {
-                    navController.navigate("trip/$tripId/map/$dateStr")
-                }
+//                onNavigateToMap = {
+//                    navController.navigate("trip/$tripId/map/$dateStr")
+//                }
             )
         }
-        composable(
-            route = "trip/{tripId}/map/{date}",
-            arguments = listOf(
-                navArgument("tripId") { type = NavType.StringType },
-                navArgument("date") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val tripId = backStackEntry.arguments?.getString("tripId") ?: return@composable
-            val dateStr = backStackEntry.arguments?.getString("date") ?: return@composable
-            
-        }
+//        composable(
+//            route = "trips/{tripId}/map",
+//            arguments = listOf(
+//                navArgument("tripId") { type = NavType.StringType },
+//            )
+//        ) { backstackEntry ->
+//            val tripId = backstackEntry.arguments?.getString("tripId")
+//            TripMapScreen(
+//                onNavigateBack = { navController.navigate("trips/${tripId}/date-selection") },
+//                onNavigateToTimeline = { navController.navigate("trips/${tripId}/timeline") }
+//            )
+//        }
     }
 }

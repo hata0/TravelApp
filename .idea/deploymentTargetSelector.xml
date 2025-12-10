@@ -13,13 +13,7 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="TripTimelineScreenTest">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="RouteLegDaoTest">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="HiltSanityCheckTest">
+      <SelectionState runConfigName="showkase">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

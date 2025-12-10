@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     id("com.google.dagger.hilt.android")
+    alias(libs.plugins.secrets.gradle.plugin)
 }
 
 android {
@@ -70,6 +71,12 @@ android {
     }
 }
 
+secrets {
+    propertiesFileName = "secrets.properties"
+
+    defaultPropertiesFileName = "local.defaults.properties"
+}
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -86,7 +93,7 @@ dependencies {
     implementation(libs.androidx.navigation.dynamic.features.fragment)
 
     // ViewModel for Compose
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
+//    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     // Hilt for Dependency Injection
     implementation(libs.hilt.android)
