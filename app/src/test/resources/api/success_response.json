@@ -1,0 +1,40 @@
+
+{
+  "routes": [
+    {
+      "legs": [
+        {
+          "distanceMeters": 1234,
+          "duration": "567s",
+          "steps": [
+            {
+              "distanceMeters": 500,
+              "staticDuration": "200s",
+              "polyline": {
+                "encodedPolyline": "polyline_step1"
+              },
+              "navigationInstruction": {
+                "instructions": "Turn left onto Main St"
+              },
+              "travelMode": "WALKING"
+            },
+            {
+              "distanceMeters": 734,
+              "staticDuration": "367s",
+              "polyline": {
+                "encodedPolyline": "polyline_step2"
+              },
+              "navigationInstruction": {
+                "instructions": "Continue straight"
+              },
+              "travelMode": "WALKING"
+            }
+          ]
+        }
+      ],
+      "polyline": {
+        "encodedPolyline": "overview_polyline"
+      }
+    }
+  ]
+}
