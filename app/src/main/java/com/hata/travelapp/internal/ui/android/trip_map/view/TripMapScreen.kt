@@ -30,6 +30,7 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import com.hata.travelapp.R
@@ -46,11 +47,21 @@ fun TripMapScreen(
     onNavigateToTimeline: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    val singapore = LatLng(1.35, 103.87)
-    val singaporeMarkerState = rememberMarkerState(position = singapore)
+    val start = LatLng(35.6804, 139.7690)  // 東京
+    val startMarkerState = rememberMarkerState(position = start)
+    val goal = LatLng(34.6937, 135.5022)  // 大阪
+    val goalMarkerState = rememberMarkerState(position = goal)
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(singapore, 10f)
+        position = CameraPosition.fromLatLngZoom(start, 10f)
     }
+
+    // 例: 取得済みのルート座標リスト（本来は Directions API 等で取得）
+    val routePoints = listOf(
+        start,
+        LatLng(35.2, 138.5),
+        LatLng(34.9, 137.5),
+        goal
+    )
 
     Scaffold(
         topBar = {
@@ -85,14 +96,14 @@ fun TripMapScreen(
         ) {
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState,
-                // FABとマップのUIコントロール（ズームボタン等）が被らないように下部にパディングを追加
-                contentPadding = PaddingValues(bottom = 80.dp)
+                cameraPositionState = cameraPositionState
             ) {
-                Marker(
-//                state = MarkerState(position = tokyo),
-                    title = "Tokyo",
-                    snippet = "Marker in Tokyo"
+                Marker(state = startMarkerState, title = "スタート")
+                Marker(state = goalMarkerState, title = "ゴール")
+
+                Polyline(
+                    points = routePoints,
+                    width = 8f,
                 )
             }
 
