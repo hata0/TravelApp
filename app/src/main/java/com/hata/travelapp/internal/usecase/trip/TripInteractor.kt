@@ -25,7 +25,8 @@ class TripInteractor(
             startedAt = startedAt,
             endedAt = endedAt,
             createdAt = now,
-            updatedAt = now
+            updatedAt = now,
+            destinations = emptyList()
         )
         tripRepository.create(trip)
     }
@@ -42,12 +43,22 @@ class TripInteractor(
             title = title,
             startedAt = startedAt,
             endedAt = endedAt,
-            updatedAt = LocalDateTime.now()
+            updatedAt = LocalDateTime.now(),
+            destinations = trip.destinations
         )
         tripRepository.update(updatedTrip)
     }
 
     override suspend fun delete(id: String) {
         tripRepository.delete(TripId(id))
+    }
+    override suspend fun calculateTravelTimes(tripId: TripId) {
+        // TODO: ここに移動時間を計算するロジックを実装します。
+        // 例:
+        // 1. tripIdを使って旅行情報を取得する
+        // val trip = tripRepository.getById(tripId)
+        // 2. 目的地リストを使って外部API（Google Directions APIなど）を呼び出す
+        // 3. 計算結果を保存する
+        println("calculateTravelTimes for tripId: ${tripId.value} is not implemented yet.") // 仮実装
     }
 }

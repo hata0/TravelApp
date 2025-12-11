@@ -1,6 +1,7 @@
 package com.hata.travelapp.internal.api.server.http.trip
 
 import com.hata.travelapp.internal.domain.error.AppError
+import com.hata.travelapp.internal.domain.trip.Destination
 import com.hata.travelapp.internal.domain.trip.Trip
 import com.hata.travelapp.internal.domain.trip.TripErrorCode
 import com.hata.travelapp.internal.domain.trip.TripId
@@ -27,7 +28,16 @@ class ServerApiTripMapperImpl : ServerApiTripMapper {
             startedAt = parseOrThrow(model.startedAt),
             endedAt = parseOrThrow(model.endedAt),
             createdAt = parseOrThrow(model.createdAt),
-            updatedAt = parseOrThrow(model.updatedAt)
+            updatedAt = parseOrThrow(model.updatedAt),
+            destinations = model.destinations.map {
+                Destination(
+                    name = it.name,
+                    latitude = it.latitude,
+                    longitude = it.longitude,
+                    createdAt = parseOrThrow(it.createdAt),
+                    updatedAt = parseOrThrow(it.updatedAt)
+                )
+            }
         )
     }
 
@@ -38,7 +48,16 @@ class ServerApiTripMapperImpl : ServerApiTripMapper {
             startedAt = entity.startedAt.format(formatter),
             endedAt = entity.endedAt.format(formatter),
             createdAt = entity.createdAt.format(formatter),
-            updatedAt = entity.updatedAt.format(formatter)
+            updatedAt = entity.updatedAt.format(formatter),
+            destinations = entity.destinations.map {
+                ServerApiDestinationModel(
+                    name = it.name,
+                    latitude = it.latitude,
+                    longitude = it.longitude,
+                    createdAt = it.createdAt.format(formatter),
+                    updatedAt = it.updatedAt.format(formatter)
+                )
+            }
         )
     }
 }

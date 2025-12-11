@@ -14,4 +14,9 @@ data class Trip(
     fun update(title: String, startedAt: LocalDateTime, endedAt: LocalDateTime, updatedAt: LocalDateTime, destinations: List<Destination>): Trip {
         return this.copy(title = title, startedAt = startedAt, endedAt = endedAt, updatedAt = updatedAt, destinations = destinations)
     }
+
+    fun addDestination(destination: Destination): Trip {
+        val newDestinations = destinations + destination
+        return this.copy(destinations = newDestinations, updatedAt = LocalDateTime.now())
+    }
 }
