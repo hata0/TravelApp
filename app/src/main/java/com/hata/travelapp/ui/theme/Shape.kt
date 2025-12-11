@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.dp
 
 val Shapes = Shapes(
     // TagやChipなど
-    extraSmall = RoundedCornerShape(50),
+    extraSmall = RoundedCornerShape(20),
 
     // Buttonなど: シンプルなカプセル型
     small = RoundedCornerShape(50),

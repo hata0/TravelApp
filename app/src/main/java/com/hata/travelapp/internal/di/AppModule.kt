@@ -2,23 +2,25 @@ package com.hata.travelapp.internal.di
 
 import android.content.Context
 import androidx.room.Room
+import com.hata.travelapp.internal.data.repository.FakeRoutesRepository
 import com.hata.travelapp.internal.data.repository.FakeTripRepository
+import com.hata.travelapp.internal.data.repository.GoogleRoutesRepositoryImpl
 import com.hata.travelapp.internal.data.source.local.AppDatabase
 import com.hata.travelapp.internal.data.source.local.dao.RouteLegDao
 import com.hata.travelapp.internal.data.source.local.dao.TripDao
 import com.hata.travelapp.internal.data.source.remote.RoutesApiService
-import com.hata.travelapp.internal.data.repository.GoogleRoutesRepositoryImpl
-import com.hata.travelapp.internal.data.repository.FakeRoutesRepository
 import com.hata.travelapp.internal.domain.trip.repository.RoutesRepository
+import com.hata.travelapp.internal.domain.trip.repository.TripRepository
 import com.hata.travelapp.internal.domain.trip.service.TimelineGenerator
 import com.hata.travelapp.internal.domain.trip.service.TimelineGeneratorImpl
-import com.hata.travelapp.internal.domain.trip.repository.TripRepository
 import com.hata.travelapp.internal.usecase.trip.GenerateTimelineUseCase
 import com.hata.travelapp.internal.usecase.trip.GenerateTimelineUseCaseImpl
 import com.hata.travelapp.internal.usecase.trip.RecalculateTimelineUseCase
 import com.hata.travelapp.internal.usecase.trip.RecalculateTimelineUseCaseImpl
 import com.hata.travelapp.internal.usecase.trip.TripUsecase
 import com.hata.travelapp.internal.usecase.trip.TripUsecaseImpl
+import com.hata.travelapp.internal.usecase.trip.UpdateDailyPlanUseCase
+import com.hata.travelapp.internal.usecase.trip.UpdateDailyPlanUseCaseImpl
 import com.hata.travelapp.internal.usecase.trip.UpdateDailyStartTimeUseCase
 import com.hata.travelapp.internal.usecase.trip.UpdateDailyStartTimeUseCaseImpl
 import com.hata.travelapp.internal.usecase.trip.UpdateStayDurationUseCase
@@ -140,4 +142,11 @@ object AppModule {
     fun provideUpdateStayDurationUseCase(
         tripRepository: TripRepository
     ): UpdateStayDurationUseCase = UpdateStayDurationUseCaseImpl(tripRepository)
+
+    @Provides
+    @Singleton
+    fun provideUpdateDailyPlanUseCase(
+        tripRepository: TripRepository
+    ): UpdateDailyPlanUseCase = UpdateDailyPlanUseCaseImpl(tripRepository)
+    // endregion
 }
