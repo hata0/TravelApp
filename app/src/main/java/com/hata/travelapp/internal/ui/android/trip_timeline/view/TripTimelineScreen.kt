@@ -21,7 +21,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.DirectionsWalk
+import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Map
@@ -356,7 +356,7 @@ fun LegInfo(leg: RouteLeg) {
             VerticalDivider(modifier = Modifier.fillMaxHeight(), thickness = 2.dp, color = MaterialTheme.colorScheme.primary)
         }
         Spacer(modifier = Modifier.width(16.dp))
-        Icon(Icons.Default.DirectionsWalk, contentDescription = "移動", tint = MaterialTheme.colorScheme.primary)
+        Icon(Icons.Default.DirectionsCar, contentDescription = "移動", tint = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.width(8.dp))
         Text("$durationInMinutes 分 ($distanceInKm km)", style = MaterialTheme.typography.bodyMedium)
     }

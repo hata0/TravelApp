@@ -13,6 +13,7 @@ import com.hata.travelapp.internal.domain.trip.entity.RoutePoint
 import com.hata.travelapp.internal.domain.trip.entity.RouteStep
 import com.hata.travelapp.internal.domain.trip.entity.RouteStepTravelMode
 import com.hata.travelapp.internal.domain.trip.repository.RoutesRepository
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.Duration
 import com.hata.travelapp.internal.data.source.remote.RouteStep as ApiRouteStep
@@ -106,6 +107,7 @@ class GoogleRoutesRepositoryImpl(
     private fun mapStepInfoToDomain(info: RouteStepInfo): RouteStep {
         val travelMode = when (info.travelMode) {
             "WALKING" -> RouteStepTravelMode.WALKING
+            "DRIVE" -> RouteStepTravelMode.DRIVING
             else -> RouteStepTravelMode.UNKNOWN
         }
         return RouteStep(
@@ -129,6 +131,7 @@ class GoogleRoutesRepositoryImpl(
 
     private fun mapApiStepToDomain(apiStep: ApiRouteStep): RouteStep {
         val travelMode = when (apiStep.travelMode) {
+            "DRIVE" -> RouteStepTravelMode.DRIVING
             "WALKING" -> RouteStepTravelMode.WALKING
             else -> RouteStepTravelMode.UNKNOWN
         }
