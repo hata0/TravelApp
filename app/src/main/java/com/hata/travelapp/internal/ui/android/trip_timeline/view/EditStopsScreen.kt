@@ -1,5 +1,7 @@
 package com.hata.travelapp.internal.ui.android.trip_timeline.view
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -7,11 +9,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,21 +50,43 @@ fun EditStopsScreen(
     onNavigateBack: () -> Unit
 ) {
     val stops by viewModel.stops.collectAsStateWithLifecycle()
+    val hasUnsavedChanges by viewModel.hasUnsavedChanges.collectAsStateWithLifecycle()
+    var showConfirmDialog by remember { mutableStateOf(false) }
+
+    val backAction = {
+        if (hasUnsavedChanges) {
+            showConfirmDialog = true
+        } else {
+            onNavigateBack()
+        }
+    }
+
+    BackHandler(onBack = backAction)
+
+    if (showConfirmDialog) {
+        ConfirmDiscardChangesDialog(
+            onConfirm = {
+                showConfirmDialog = false
+                onNavigateBack()
+            },
+            onDismiss = { showConfirmDialog = false }
+        )
+    }
 
     EditStopsContent(
         stops = stops,
-        onNavigateBack = onNavigateBack,
-        onMoveUp = viewModel::onMoveUp, // Connect to ViewModel
-        onMoveDown = viewModel::onMoveDown, // Connect to ViewModel
-        onDelete = viewModel::onDeleteStop, // Connect to ViewModel
+        onNavigateBack = backAction,
+        onMoveUp = viewModel::onMoveUp,
+        onMoveDown = viewModel::onMoveDown,
+        onDelete = viewModel::onDeleteStop,
         onSaveChanges = {
             viewModel.onSaveChanges()
-            onNavigateBack() // Navigate back after saving
+            onNavigateBack()
         }
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun EditStopsContent(
     stops: List<RoutePoint>,
@@ -94,8 +120,22 @@ private fun EditStopsContent(
             contentPadding = 8.dp.let { PaddingValues(horizontal = it, vertical = it) },
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(stops, key = { it.id.value }) { stop ->
-                Card(modifier = Modifier.fillMaxWidth()) {
+            itemsIndexed(stops, key = { _, stop -> stop.id.value }) { index, stop ->
+                val cardColors = when (index) {
+                    0, stops.lastIndex -> CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                    else -> CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                }
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateItem(),
+                    colors = cardColors
+                ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -105,7 +145,7 @@ private fun EditStopsContent(
                         Text(
                             text = stop.name,
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.titleLarge
                         )
                         Box {
                             IconButton(onClick = { expandedMenuId = stop.id }) {
@@ -143,6 +183,28 @@ private fun EditStopsContent(
             }
         }
     }
+}
+
+@Composable
+private fun ConfirmDiscardChangesDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("変更の破棄") },
+        text = { Text("編集中の内容は保存されません。本当に画面を閉じますか？") },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("破棄")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("キャンセル")
+            }
+        }
+    )
 }
 
 @Preview(showBackground = true)

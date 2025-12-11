@@ -10,7 +10,11 @@ import com.hata.travelapp.internal.usecase.trip.TripUsecase
 import com.hata.travelapp.internal.usecase.trip.UpdateDailyPlanUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -24,15 +28,20 @@ import javax.inject.Inject
 @HiltViewModel
 class EditStopsViewModel @Inject constructor(
     private val tripUsecase: TripUsecase,
-    private val updateDailyPlanUseCase: UpdateDailyPlanUseCase, // Dependency added
+    private val updateDailyPlanUseCase: UpdateDailyPlanUseCase,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val tripId: String = savedStateHandle.get<String>("tripId") ?: ""
     private val date: String = savedStateHandle.get<String>("date") ?: ""
 
+    private val _initialStops = MutableStateFlow<List<RoutePoint>>(emptyList())
     private val _stops = MutableStateFlow<List<RoutePoint>>(emptyList())
     val stops = _stops.asStateFlow()
+
+    val hasUnsavedChanges: StateFlow<Boolean> = combine(_initialStops, _stops) { initial, current ->
+        initial != current
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     init {
         loadStops()
@@ -45,7 +54,9 @@ class EditStopsViewModel @Inject constructor(
                 val localDate = LocalDate.parse(date)
                 trip?.let {
                     val dailyPlan = it.dailyPlans.find { plan -> plan.dailyStartTime.toLocalDate() == localDate }
-                    _stops.value = dailyPlan?.routePoints ?: emptyList()
+                    val initial = dailyPlan?.routePoints ?: emptyList()
+                    _initialStops.value = initial
+                    _stops.value = initial
                 }
             }
         }
@@ -79,7 +90,6 @@ class EditStopsViewModel @Inject constructor(
         viewModelScope.launch {
             if (tripId.isNotBlank() && date.isNotBlank()) {
                 val localDate = LocalDate.parse(date)
-                // Delegate the complex update logic to the specific use case
                 updateDailyPlanUseCase.execute(TripId(tripId), localDate, _stops.value)
             }
         }
