@@ -43,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -169,7 +170,7 @@ private fun TripsNewScreenContent(
         Image(
             painter = painterResource(id = R.drawable.biba_map),
             contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().scale(1.2f), // 1.2倍に拡大
             contentScale = ContentScale.Crop
         )
 
