@@ -76,6 +76,7 @@ fun TripMapScreen(
     val cameraPosition by viewModel.cameraPosition.collectAsState()
     val isAddDestinationDialogVisible by viewModel.isAddDestinationDialogVisible.collectAsState()
     val destinationNameInput by viewModel.destinationNameInput.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
 
     val defaultCameraPosition = CameraPosition.fromLatLngZoom(LatLng(35.6895, 139.6917), 10f) // Default to Tokyo
     val cameraPositionState = rememberCameraPositionState {
