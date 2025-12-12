@@ -8,6 +8,7 @@ import com.hata.travelapp.internal.domain.trip.entity.RoutePoint
 import com.hata.travelapp.internal.domain.trip.entity.RoutePointId
 import com.hata.travelapp.internal.domain.trip.entity.TripId
 import com.hata.travelapp.internal.usecase.trip.GenerateTimelineUseCase
+import com.hata.travelapp.internal.usecase.trip.UpdateDailyPlanUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,8 +27,21 @@ data class SearchResult(
 
 @HiltViewModel
 class TripMapViewModel @Inject constructor(
-    private val generateTimelineUseCase: GenerateTimelineUseCase
+    private val generateTimelineUseCase: GenerateTimelineUseCase,
+    private val updateDailyPlanUseCase: UpdateDailyPlanUseCase
 ) : ViewModel() {
+
+    private var currentTripId: TripId? = null
+    private var currentDate: LocalDate? = null
+
+    private val _isAddDestinationDialogVisible = MutableStateFlow(false)
+    val isAddDestinationDialogVisible: StateFlow<Boolean> = _isAddDestinationDialogVisible.asStateFlow()
+
+    private val _pendingDestinationLatLng = MutableStateFlow<LatLng?>(null)
+    // val pendingDestinationLatLng: StateFlow<LatLng?> = _pendingDestinationLatLng.asStateFlow() // Internal use mainly
+
+    private val _destinationNameInput = MutableStateFlow("")
+    val destinationNameInput: StateFlow<String> = _destinationNameInput.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -45,6 +59,8 @@ class TripMapViewModel @Inject constructor(
     val route: StateFlow<com.hata.travelapp.internal.domain.trip.entity.Route?> = _route.asStateFlow()
 
     fun loadRoute(tripId: TripId, date: LocalDate) {
+        currentTripId = tripId
+        currentDate = date
         viewModelScope.launch {
             val loadedRoute = generateTimelineUseCase.execute(tripId, date)
             _route.value = loadedRoute
@@ -80,5 +96,50 @@ class TripMapViewModel @Inject constructor(
 
     fun clearSelection() {
         _selectedLocation.value = null
+    }
+
+
+    fun onMapLongClicked(latLng: LatLng) {
+        _pendingDestinationLatLng.value = latLng
+        _destinationNameInput.value = ""
+        _isAddDestinationDialogVisible.value = true
+    }
+
+    fun onDestinationNameChanged(name: String) {
+        _destinationNameInput.value = name
+    }
+
+    fun onDismissAddDestinationDialog() {
+        _isAddDestinationDialogVisible.value = false
+        _pendingDestinationLatLng.value = null
+        _destinationNameInput.value = ""
+    }
+
+    fun onAddDestinationConfirmed() {
+        val tripId = currentTripId ?: return
+        val date = currentDate ?: return
+        val latLng = _pendingDestinationLatLng.value ?: return
+        val name = _destinationNameInput.value
+
+        if (name.isBlank()) return
+
+        val newPoint = RoutePoint(
+            id = RoutePointId(UUID.randomUUID().toString()),
+            name = name,
+            latitude = latLng.latitude,
+            longitude = latLng.longitude,
+            stayDurationInMinutes = 60, // Default duration
+            createdAt = LocalDateTime.now(),
+            updatedAt = LocalDateTime.now()
+        )
+
+        val currentPoints = _route.value?.stops?.map { it.routePoint } ?: emptyList()
+        val newPoints = currentPoints + newPoint
+
+        viewModelScope.launch {
+            updateDailyPlanUseCase.execute(tripId, date, newPoints)
+            onDismissAddDestinationDialog()
+            loadRoute(tripId, date) // Reload to reflect changes
+        }
     }
 }

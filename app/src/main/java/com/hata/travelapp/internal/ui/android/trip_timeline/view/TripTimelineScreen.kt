@@ -22,6 +22,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Map
@@ -57,9 +58,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.hata.travelapp.R
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.hata.travelapp.R
 import com.hata.travelapp.internal.domain.trip.entity.Route
 import com.hata.travelapp.internal.domain.trip.entity.RouteLeg
 import com.hata.travelapp.internal.domain.trip.entity.RoutePoint
@@ -78,6 +79,7 @@ fun TripTimelineScreen(
     tripId: TripId,
     date: LocalDate,
     onNavigateToMap: () -> Unit,
+    onNavigateToEdit: () -> Unit, // New callback
     onNavigateBack: () -> Unit
 ) {
     val route by viewModel.route.collectAsStateWithLifecycle()
@@ -92,6 +94,7 @@ fun TripTimelineScreen(
         isLoading = isLoading,
         onNavigateToMap = onNavigateToMap,
         onNavigateBack = onNavigateBack,
+        onNavigateToEdit = onNavigateToEdit, // Pass down
         onDailyStartTimeChanged = { viewModel.onDailyStartTimeChanged(it) },
         onStayDurationChanged = { pointId, duration -> viewModel.onStayDurationChanged(pointId, duration) }
     )
@@ -104,6 +107,7 @@ private fun TripTimelineContent(
     isLoading: Boolean,
     onNavigateToMap: () -> Unit,
     onNavigateBack: () -> Unit,
+    onNavigateToEdit: () -> Unit, // New callback
     onDailyStartTimeChanged: (LocalDateTime) -> Unit,
     onStayDurationChanged: (RoutePointId, Int) -> Unit
 ) {
@@ -114,6 +118,11 @@ private fun TripTimelineContent(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
+                    }
+                },
+                actions = { // New actions block
+                    IconButton(onClick = onNavigateToEdit) {
+                        Icon(Icons.Default.Edit, contentDescription = "編集")
                     }
                 }
             )
@@ -356,7 +365,7 @@ fun LegInfo(leg: RouteLeg) {
             VerticalDivider(modifier = Modifier.fillMaxHeight(), thickness = 2.dp, color = MaterialTheme.colorScheme.primary)
         }
         Spacer(modifier = Modifier.width(16.dp))
-        Icon(Icons.Default.DirectionsCar, contentDescription = "移動", tint = MaterialTheme.colorScheme.primary)
+        Icon(Icons.Default.DirectionsCar, contentDescription = "移動", tint = MaterialTheme.colorScheme.primary) // Changed Icon
         Spacer(modifier = Modifier.width(8.dp))
         Text("$durationInMinutes 分 ($distanceInKm km)", style = MaterialTheme.typography.bodyMedium)
     }
@@ -450,8 +459,8 @@ fun TimeSpinner(
 @Preview(showBackground = true)
 @Composable
 fun TripTimelineScreenPreview() {
-    val dummyPoint1 = RoutePoint(RoutePointId("1"), "東京駅", 35.68, 139.76, 0, LocalDateTime.now(), LocalDateTime.now())
-    val dummyPoint2 = RoutePoint(RoutePointId("2"), "ホテル", 35.685, 139.77, 120, LocalDateTime.now(), LocalDateTime.now())
+    val dummyPoint1 = RoutePoint(id = RoutePointId("p1"), name = "東京駅", latitude = 35.68, longitude = 139.76, stayDurationInMinutes = 0, createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+    val dummyPoint2 = RoutePoint(id = RoutePointId("p2"), name = "ホテル", latitude = 35.685, longitude = 139.77, stayDurationInMinutes = 120, createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
 
     val dummyRoute = Route(
         stops = listOf(
@@ -474,6 +483,7 @@ fun TripTimelineScreenPreview() {
         route = dummyRoute,
         isLoading = false,
         onNavigateToMap = {},
+        onNavigateToEdit = {},
         onNavigateBack = {},
         onDailyStartTimeChanged = {},
         onStayDurationChanged = { _, _ -> }

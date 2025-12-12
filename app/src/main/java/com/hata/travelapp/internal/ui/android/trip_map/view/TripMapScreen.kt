@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -66,6 +68,8 @@ fun TripMapScreen(
 ) {
     val route by viewModel.route.collectAsState()
     val cameraPosition by viewModel.cameraPosition.collectAsState()
+    val isAddDestinationDialogVisible by viewModel.isAddDestinationDialogVisible.collectAsState()
+    val destinationNameInput by viewModel.destinationNameInput.collectAsState()
     
     val defaultCameraPosition = CameraPosition.fromLatLngZoom(LatLng(35.6895, 139.6917), 10f) // Default to Tokyo
     val cameraPositionState = rememberCameraPositionState {
@@ -148,6 +152,7 @@ fun TripMapScreen(
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
                 cameraPositionState = cameraPositionState,
+                onMapLongClick = { latLng -> viewModel.onMapLongClicked(latLng) },
                 // FABとマップのUIコントロール（ズームボタン等）が被らないように下部にパディングを追加
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
@@ -191,6 +196,35 @@ fun TripMapScreen(
                     .clip(MaterialTheme.shapes.medium)
                     .alpha(0.9f)
             )
+
+            
+            if (isAddDestinationDialogVisible) {
+                AlertDialog(
+                    onDismissRequest = { viewModel.onDismissAddDestinationDialog() },
+                    title = { Text("目的地を追加") },
+                    text = {
+                        OutlinedTextField(
+                            value = destinationNameInput,
+                            onValueChange = { viewModel.onDestinationNameChanged(it) },
+                            label = { Text("場所の名前") }
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = { viewModel.onAddDestinationConfirmed() }
+                        ) {
+                            Text("追加")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { viewModel.onDismissAddDestinationDialog() }
+                        ) {
+                            Text("キャンセル")
+                        }
+                    }
+                )
+            }
         }
     }
 }
