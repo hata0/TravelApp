@@ -60,8 +60,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     onNavigateToNewProject: () -> Unit,
     onProjectClick: (String) -> Unit,
-    onEditProject: (String) -> Unit,
-    onDeleteProject: (String) -> Unit
+    onEditProject: (String) -> Unit
 ) {
     val projects by viewModel.projects.collectAsStateWithLifecycle()
 
@@ -70,7 +69,7 @@ fun HomeScreen(
         onNavigateToNewProject = onNavigateToNewProject,
         onProjectClick = onProjectClick,
         onEditProject = onEditProject,
-        onDeleteProject = onDeleteProject
+        onDeleteProject = { viewModel.deleteProject(it) }
     )
 }
 

@@ -66,7 +66,6 @@ fun ApplicationNavigationHost(
             HomeScreen(
                 onNavigateToNewProject = { navController.navigate("trips/new") },
                 onEditProject = { },
-                onDeleteProject = { /* TODO: ViewModelと連携して削除処理を実装 */ },
                 onProjectClick = { projectId -> navController.navigate("trips/$projectId/date-selection") },
             )
         }

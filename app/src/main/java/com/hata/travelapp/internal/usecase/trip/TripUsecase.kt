@@ -75,6 +75,6 @@ class TripUsecaseImpl(
     }
 
     override suspend fun delete(id: String) {
-        // 実装は仮
+        tripRepository.delete(TripId(id))
     }
 }

@@ -67,7 +67,7 @@ object AppModule {
     @Provides
     @Singleton
     fun providePlacesClient(@ApplicationContext context: Context): PlacesClient {
-        Places.initialize(context, BuildConfig.MAPS_API_KEY)
+        Places.initialize(context, BuildConfig.MAPS_API_KEY, java.util.Locale.JAPAN)
         return Places.createClient(context)
     }
 
