@@ -76,10 +76,10 @@ data class RouteStep(
 
 /**
  * 移動手段を表すドメインのenum。
- * 当面は徒歩のみを考慮する。
  */
 enum class RouteStepTravelMode {
     WALKING,
+    DRIVING, // Added DRIVING
     UNKNOWN
 }
 

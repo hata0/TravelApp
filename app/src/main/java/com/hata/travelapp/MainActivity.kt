@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -18,7 +20,9 @@ import androidx.navigation.navArgument
 import com.hata.travelapp.internal.domain.trip.entity.TripId
 import com.hata.travelapp.internal.ui.android.home.view.HomeScreen
 import com.hata.travelapp.internal.ui.android.trip_map.view.TripMapScreen
+import com.hata.travelapp.internal.ui.android.trip_timeline.view.EditStopsScreen
 import com.hata.travelapp.internal.ui.android.trip_timeline.view.TripTimelineScreen
+import com.hata.travelapp.internal.ui.android.trip_timeline.view.TripTimelineViewModel
 import com.hata.travelapp.internal.ui.android.trips_date_selection.view.TripsDateSelectionScreen
 import com.hata.travelapp.internal.ui.android.trips_new.view.TripsNewScreen
 import com.hata.travelapp.ui.theme.TravelAppTheme
@@ -98,12 +102,44 @@ fun ApplicationNavigationHost(
         ) { backstackEntry ->
             val tripId = backstackEntry.arguments?.getString("tripId") ?: return@composable
             val date = backstackEntry.arguments?.getString("date") ?: return@composable
+            val tripIdObj = TripId(tripId)
+            val localDate = LocalDate.parse(date)
+
+            val viewModel: TripTimelineViewModel = hiltViewModel()
+
+            // Observe the result from EditStopsScreen
+            val shouldRefresh = backstackEntry.savedStateHandle.get<Boolean>("timeline_updated")
+            if (shouldRefresh == true) {
+                LaunchedEffect(Unit) {
+                    viewModel.loadTimeline(tripIdObj, localDate)
+                    backstackEntry.savedStateHandle["timeline_updated"] = false
+                }
+            }
 
             TripTimelineScreen(
+                viewModel = viewModel, // Inject the ViewModel
+                tripId = tripIdObj,
+                date = localDate,
                 onNavigateBack = { navController.navigate("trips/${tripId}/date-selection") },
                 onNavigateToMap = { navController.navigate("trips/${tripId}/map?date=${date}") },
-                tripId = TripId(tripId),
-                date = LocalDate.parse(date),
+                onNavigateToEdit = { navController.navigate("trips/${tripId}/timeline/edit?date=${date}") },
+            )
+        }
+        composable(
+            route = "trips/{tripId}/timeline/edit?date={date}",
+            arguments = listOf(
+                navArgument("tripId") { type = NavType.StringType },
+                navArgument("date") { type = NavType.StringType }
+            )
+        ) {
+            EditStopsScreen(
+                viewModel = hiltViewModel(),
+                onNavigateBack = {
+                    // Set the result on the previous screen's SavedStateHandle
+                    navController.previousBackStackEntry?.savedStateHandle?.set("timeline_updated", true)
+                    // Then, pop the back stack
+                    navController.popBackStack()
+                }
             )
         }
         composable(
@@ -117,6 +153,8 @@ fun ApplicationNavigationHost(
             val date = backstackEntry.arguments?.getString("date") ?: return@composable
 
             TripMapScreen(
+                tripId = TripId(tripId!!),
+                date = LocalDate.parse(date),
                 onNavigateBack = { navController.navigate("trips/${tripId}/date-selection") },
                 onNavigateToTimeline = { navController.navigate("trips/${tripId}/timeline?date=${date}") }
             )

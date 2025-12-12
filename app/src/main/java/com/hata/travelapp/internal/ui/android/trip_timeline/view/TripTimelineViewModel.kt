@@ -44,9 +44,8 @@ class TripTimelineViewModel @Inject constructor(
     private var currentDate: LocalDate? = null
 
     fun loadTimeline(tripId: TripId, date: LocalDate) {
-        if (currentTripId == tripId && currentDate == date && _route.value != null) {
-            return
-        }
+        // The guard clause that prevented reloading was removed.
+        // Now, this method will always re-fetch and re-generate the timeline.
         currentTripId = tripId
         currentDate = date
 

@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 data class ComputeRoutesRequest(
     val origin: Waypoint,
     val destination: Waypoint,
-    val travelMode: String = "WALK",
+    val travelMode: String = "DRIVE", // Changed from WALK to DRIVE
     val routingPreference: String = "TRAFFIC_AWARE",
     val languageCode: String = "ja"
 )
