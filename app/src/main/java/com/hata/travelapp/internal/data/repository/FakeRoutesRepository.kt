@@ -13,7 +13,7 @@ class FakeRoutesRepository : RoutesRepository {
             to = to,
             duration = Duration.ofMinutes(60),
             distanceMeters = 50000,
-            polyline = "", // Empty polyline for now, or could use a dummy string
+            polyline = "", // Dummy polyline
             steps = emptyList()
         )
     }

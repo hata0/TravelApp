@@ -153,6 +153,8 @@ fun ApplicationNavigationHost(
             val date = backstackEntry.arguments?.getString("date") ?: return@composable
 
             TripMapScreen(
+                tripId = TripId(tripId!!),
+                date = LocalDate.parse(date),
                 onNavigateBack = { navController.navigate("trips/${tripId}/date-selection") },
                 onNavigateToTimeline = { navController.navigate("trips/${tripId}/timeline?date=${date}") }
             )
