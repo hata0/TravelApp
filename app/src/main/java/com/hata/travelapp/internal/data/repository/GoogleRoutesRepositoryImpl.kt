@@ -17,6 +17,9 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.Duration
 import com.hata.travelapp.internal.data.source.remote.RouteStep as ApiRouteStep
+import android.util.Log
+
+private const val TAG = "GoogleRoutesRepo"
 
 /**
  * Google Routes APIとローカルDBキャッシュを使用してルート情報を取得する、`RoutesRepository`の実装クラス。
@@ -31,16 +34,16 @@ class GoogleRoutesRepositoryImpl(
         // 1. Check cache first
         val cachedLeg = routeLegDao.getRouteLeg(from.id.value, to.id.value)
         if (cachedLeg != null) {
-            println("Cache hit for route: ${from.name} -> ${to.name}")
+            Log.d(TAG, "Cache hit for route: ${from.name} -> ${to.name}")
             return mapEntityToDomain(cachedLeg, from, to)
         }
 
-        println("Cache miss for route: ${from.name} -> ${to.name}. Fetching from API.")
+        Log.d(TAG, "Cache miss for route: ${from.name} -> ${to.name}. Fetching from API.")
 
         // 2. If not in cache, fetch from API
         return try {
             if (apiKey.isBlank()) {
-                println("Google Routes API key is not set.")
+                Log.e(TAG, "Google Routes API key is not set.")
                 return null
             }
 
@@ -65,11 +68,16 @@ class GoogleRoutesRepositoryImpl(
             // 3. Save to cache
             val entityToCache = mapDomainToEntity(domainRouteLeg)
             routeLegDao.insertRouteLeg(entityToCache)
-            println("Saved route to cache: ${from.name} -> ${to.name}")
+            Log.d(TAG, "Saved route to cache: ${from.name} -> ${to.name}")
 
             domainRouteLeg
         } catch (e: Exception) {
-            println("Failed to get routes: ${e.message}")
+            if (e is retrofit2.HttpException) {
+                val errorBody = e.response()?.errorBody()?.string()
+                Log.e(TAG, "Failed to get routes: HTTP ${e.code()} - $errorBody", e)
+            } else {
+                Log.e(TAG, "Failed to get routes: ${e.message}", e)
+            }
             null
         }
     }
