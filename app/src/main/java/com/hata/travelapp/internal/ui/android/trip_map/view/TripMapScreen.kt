@@ -11,6 +11,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Icon
@@ -70,6 +76,8 @@ fun TripMapScreen(
     val cameraPosition by viewModel.cameraPosition.collectAsState()
     val isAddDestinationDialogVisible by viewModel.isAddDestinationDialogVisible.collectAsState()
     val destinationNameInput by viewModel.destinationNameInput.collectAsState()
+    val searchResults by viewModel.searchResults.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
     
     val defaultCameraPosition = CameraPosition.fromLatLngZoom(LatLng(35.6895, 139.6917), 10f) // Default to Tokyo
     val cameraPositionState = rememberCameraPositionState {
@@ -123,8 +131,8 @@ fun TripMapScreen(
             TopAppBar(
                 title = {
                     OutlinedTextField(
-                        value = "",
-                        onValueChange = {},
+                        value = searchQuery,
+                        onValueChange = { viewModel.onSearchQueryChanged(it) },
                         label = { Text("目的地を検索") },
                     )
                 },
@@ -181,6 +189,29 @@ fun TripMapScreen(
                         color = Color.Blue,
                         width = 10f
                     )
+                }
+            }
+
+            if (searchResults.isNotEmpty()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    items(searchResults.size) { index ->
+                        val result = searchResults[index]
+                        ListItem(
+                            headlineContent = { Text(result.name) },
+                            supportingContent = { Text(result.address) },
+                            modifier = Modifier.clickable {
+                                viewModel.onSearchResultSelected(result)
+                            }
+                        )
+                        HorizontalDivider()
+                    }
                 }
             }
 

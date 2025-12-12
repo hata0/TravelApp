@@ -2,13 +2,17 @@ package com.hata.travelapp.internal.di
 
 import android.content.Context
 import androidx.room.Room
-import com.hata.travelapp.internal.data.repository.FakeRoutesRepository
-import com.hata.travelapp.internal.data.repository.FakeTripRepository
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.net.PlacesClient
+import com.hata.travelapp.BuildConfig
+import com.hata.travelapp.internal.data.repository.GooglePlaceRepository
 import com.hata.travelapp.internal.data.repository.GoogleRoutesRepositoryImpl
+import com.hata.travelapp.internal.data.repository.RoomTripRepository
 import com.hata.travelapp.internal.data.source.local.AppDatabase
 import com.hata.travelapp.internal.data.source.local.dao.RouteLegDao
 import com.hata.travelapp.internal.data.source.local.dao.TripDao
 import com.hata.travelapp.internal.data.source.remote.RoutesApiService
+import com.hata.travelapp.internal.domain.repository.PlaceRepository
 import com.hata.travelapp.internal.domain.trip.repository.RoutesRepository
 import com.hata.travelapp.internal.domain.trip.repository.TripRepository
 import com.hata.travelapp.internal.domain.trip.service.TimelineGenerator
@@ -55,10 +59,17 @@ object AppModule {
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit = Retrofit.Builder()
-        .baseUrl("https://maps.googleapis.com/")
+        .baseUrl("https://routes.googleapis.com/")
         .client(okHttpClient)
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
+
+    @Provides
+    @Singleton
+    fun providePlacesClient(@ApplicationContext context: Context): PlacesClient {
+        Places.initialize(context, BuildConfig.MAPS_API_KEY)
+        return Places.createClient(context)
+    }
 
     @Provides
     @Singleton
@@ -93,11 +104,22 @@ object AppModule {
     // region Repositories
     @Provides
     @Singleton
-    fun provideTripRepository(): TripRepository = FakeTripRepository() // Swapped to FakeTripRepository
+    fun provideTripRepository(roomTripRepository: RoomTripRepository): TripRepository = roomTripRepository
 
     @Provides
     @Singleton
-    fun provideRoutesRepository(): RoutesRepository = FakeRoutesRepository()
+    fun provideRoutesRepository(
+        apiService: RoutesApiService,
+        routeLegDao: RouteLegDao
+    ): RoutesRepository = GoogleRoutesRepositoryImpl(
+        apiService = apiService,
+        routeLegDao = routeLegDao,
+        apiKey = BuildConfig.MAPS_API_KEY
+    )
+
+    @Provides
+    @Singleton
+    fun providePlaceRepository(googlePlaceRepository: GooglePlaceRepository): PlaceRepository = googlePlaceRepository
     // endregion
 
     // region Domain Services

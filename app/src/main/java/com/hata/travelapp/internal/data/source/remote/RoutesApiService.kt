@@ -21,7 +21,7 @@ interface RoutesApiService {
     @POST("directions/v2:computeRoutes")
     suspend fun computeRoutes(
         @Header("X-Goog-Api-Key") apiKey: String,
-        @Header("X-Goog-FieldMask") fieldMask: String = "routes.legs,routes.overview_polyline",
+        @Header("X-Goog-FieldMask") fieldMask: String = "routes.legs,routes.polyline.encodedPolyline,routes.legs.steps.navigationInstruction,routes.legs.steps.polyline.encodedPolyline",
         @Body request: ComputeRoutesRequest
     ): RoutesApiResponse
 }

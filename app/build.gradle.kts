@@ -33,6 +33,8 @@ android {
         }
 
         buildConfigField("String", "SERVER_API_BASE_URL", "\"${localProperties.getProperty("SERVER_API_BASE_URL")}\"")
+        buildConfigField("String", "MAPS_API_KEY", "\"${localProperties.getProperty("MAPS_API_KEY")}\"")
+
     }
 
     buildTypes {
@@ -113,6 +115,8 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.kotlinx.serialization.converter)
     implementation(libs.okhttp)
+    implementation(libs.places)
+
 
     implementation(libs.play.services.maps)
     implementation(libs.maps.compose)

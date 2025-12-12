@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.hata.travelapp.internal.domain.repository.PlaceRepository
 import com.hata.travelapp.internal.domain.trip.entity.RoutePoint
 import com.hata.travelapp.internal.domain.trip.entity.RoutePointId
 import com.hata.travelapp.internal.domain.trip.entity.TripId
 import com.hata.travelapp.internal.usecase.trip.GenerateTimelineUseCase
 import com.hata.travelapp.internal.usecase.trip.UpdateDailyPlanUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,25 +23,27 @@ import java.util.UUID
 import javax.inject.Inject
 
 data class SearchResult(
+    val placeId: String,
     val name: String,
-    val latLng: LatLng,
+    val latLng: LatLng?,
     val address: String
 )
 
 @HiltViewModel
 class TripMapViewModel @Inject constructor(
     private val generateTimelineUseCase: GenerateTimelineUseCase,
-    private val updateDailyPlanUseCase: UpdateDailyPlanUseCase
+    private val updateDailyPlanUseCase: UpdateDailyPlanUseCase,
+    private val placeRepository: PlaceRepository
 ) : ViewModel() {
 
     private var currentTripId: TripId? = null
     private var currentDate: LocalDate? = null
+    private var searchJob: Job? = null
 
     private val _isAddDestinationDialogVisible = MutableStateFlow(false)
     val isAddDestinationDialogVisible: StateFlow<Boolean> = _isAddDestinationDialogVisible.asStateFlow()
 
     private val _pendingDestinationLatLng = MutableStateFlow<LatLng?>(null)
-    // val pendingDestinationLatLng: StateFlow<LatLng?> = _pendingDestinationLatLng.asStateFlow() // Internal use mainly
 
     private val _destinationNameInput = MutableStateFlow("")
     val destinationNameInput: StateFlow<String> = _destinationNameInput.asStateFlow()
@@ -69,35 +74,59 @@ class TripMapViewModel @Inject constructor(
 
     fun onSearchQueryChanged(query: String) {
         _searchQuery.value = query
-        // Mock Search Logic: Simple fake results based on query length or specific keywords
-        if (query.length > 1) {
-            _searchResults.value = listOf(
-                SearchResult("札幌駅", LatLng(43.068661, 141.350755), "北海道札幌市北区北6条西4丁目"),
-                SearchResult("大通公園", LatLng(43.0598, 141.3479), "北海道札幌市中央区大通西7丁目"),
-                SearchResult("すすきの", LatLng(43.0559, 141.3533), "北海道札幌市中央区南4条西4丁目")
-            )
-        } else {
+        searchJob?.cancel()
+        
+        if (query.isBlank()) {
             _searchResults.value = emptyList()
+            return
+        }
+
+        searchJob = viewModelScope.launch {
+            delay(500) // Debounce
+            val results = placeRepository.searchPlaces(query)
+            _searchResults.value = results.map { 
+                SearchResult(
+                    placeId = it.placeId,
+                    name = it.name,
+                    latLng = null, // LatLng not available in autocomplete results
+                    address = it.address
+                )
+            }
         }
     }
 
     fun onSearchResultSelected(result: SearchResult) {
-        _selectedLocation.value = result
-        _cameraPosition.value = CameraPosition.fromLatLngZoom(result.latLng, 15f)
-        _searchResults.value = emptyList() // Hide results list after selection
-        _searchQuery.value = result.name // Update text field
+        // Clear search results immediately
+        _searchResults.value = emptyList()
+        _searchQuery.value = result.name
+
+        viewModelScope.launch {
+            // Fetch details to get LatLng
+            val details = placeRepository.fetchPlaceDetails(result.placeId)
+            if (details != null) {
+                val detailedResult = SearchResult(
+                    placeId = details.placeId,
+                    name = details.name,
+                    latLng = details.latLng,
+                    address = details.address
+                )
+                _selectedLocation.value = detailedResult
+                _cameraPosition.value = CameraPosition.fromLatLngZoom(details.latLng, 15f)
+            } else {
+               // Handle error or do nothing
+            }
+        }
     }
 
     fun onMapClicked(latLng: LatLng) {
-        // Allow selecting points by clicking on map (Mock reverse geocoding)
-        val result = SearchResult("選択された地点", latLng, "経度: ${latLng.latitude}, 緯度: ${latLng.longitude}")
+        // Keeping this for manual selection on map if needed
+        val result = SearchResult("manual_selection", "選択された地点", latLng, "Lat: ${latLng.latitude}, Lng: ${latLng.longitude}")
         _selectedLocation.value = result
     }
 
     fun clearSelection() {
         _selectedLocation.value = null
     }
-
 
     fun onMapLongClicked(latLng: LatLng) {
         _pendingDestinationLatLng.value = latLng
