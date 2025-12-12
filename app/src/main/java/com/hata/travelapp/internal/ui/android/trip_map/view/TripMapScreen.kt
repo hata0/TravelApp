@@ -70,7 +70,7 @@ fun TripMapScreen(
     val cameraPosition by viewModel.cameraPosition.collectAsState()
     val isAddDestinationDialogVisible by viewModel.isAddDestinationDialogVisible.collectAsState()
     val destinationNameInput by viewModel.destinationNameInput.collectAsState()
-    
+
     val defaultCameraPosition = CameraPosition.fromLatLngZoom(LatLng(35.6895, 139.6917), 10f) // Default to Tokyo
     val cameraPositionState = rememberCameraPositionState {
         position = defaultCameraPosition
@@ -165,7 +165,7 @@ fun TripMapScreen(
                         is TimelineItem.Waypoint -> "到着: ${stop.arrivalTime.toLocalTime()} - 出発: ${stop.departureTime.toLocalTime()}"
                         is TimelineItem.FinalDestination -> "到着地: ${stop.arrivalTime.toLocalTime()}"
                     }
-                    
+
                     Marker(
                         state = MarkerState(position = position),
                         title = title,
@@ -184,20 +184,6 @@ fun TripMapScreen(
                 }
             }
 
-            // 左下のキャラクター画像 (Char2)
-            Image(
-                painter = painterResource(id = R.drawable.char2),
-                contentDescription = null,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(16.dp)
-                    .padding(bottom = 80.dp) // FABと重ならないように少し上に配置
-                    .size(200.dp) 
-                    .clip(MaterialTheme.shapes.medium)
-                    .alpha(0.9f)
-            )
-
-            
             if (isAddDestinationDialogVisible) {
                 AlertDialog(
                     onDismissRequest = { viewModel.onDismissAddDestinationDialog() },

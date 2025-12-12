@@ -170,19 +170,6 @@ private fun TripTimelineContent(
                         }
                     }
                 }
-
-                // 左下のキャラクター画像 (Char2)
-                Image(
-                    painter = painterResource(id = R.drawable.char2),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(16.dp)
-                        .padding(bottom = 80.dp) // FABと重ならないように少し上に配置
-                        .size(200.dp) // 150.dp -> 200.dp
-                        .clip(MaterialTheme.shapes.medium)
-                        .alpha(0.9f)
-                )
             }
         } else {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
