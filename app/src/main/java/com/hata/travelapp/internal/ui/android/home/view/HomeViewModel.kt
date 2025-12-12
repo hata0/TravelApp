@@ -26,8 +26,19 @@ class HomeViewModel @Inject constructor(
 
     init {
         // ViewModelが初期化されたときに、旅行リストを取得する
+        loadTrips()
+    }
+
+    private fun loadTrips() {
         viewModelScope.launch {
             _projects.value = tripUsecase.getTripList()
+        }
+    }
+
+    fun deleteProject(id: String) {
+        viewModelScope.launch {
+            tripUsecase.delete(id)
+            loadTrips()
         }
     }
 
